@@ -1,0 +1,283 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ==========================================
+// User & Project (minimal models)
+// ==========================================
+
+enum Discipline {
+  PROCESS
+  PIPING
+  ELECTRICAL
+  INSTRUMENTATION
+  CIVIL
+  MECHANICAL
+}
+
+model User {
+  id         String      @id @default(uuid())
+  email      String      @unique
+  name       String
+  password   String
+  role       String      @default("member") // admin, manager, member
+  discipline Discipline?
+  createdAt  DateTime    @default(now())
+  updatedAt  DateTime    @updatedAt
+
+  assignedSteps  WorkflowStep[]
+  projects       ProjectMember[]
+  discussions    Discussion[]
+  comments       Comment[]
+  changeRequests ChangeRequest[]
+  documents      Document[]
+}
+
+model Project {
+  id          String   @id @default(uuid())
+  name        String
+  description String?
+  status      String   @default("active") // active, archived, completed
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  members     ProjectMember[]
+  workflows   WorkflowInstance[]
+  equipment   Equipment[]
+  discussions Discussion[]
+  documents   Document[]
+}
+
+model ProjectMember {
+  id        String @id @default(uuid())
+  projectId String
+  userId    String
+  role      String @default("member") // owner, manager, member
+
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([projectId, userId])
+}
+
+// ==========================================
+// Workflow Engine
+// ==========================================
+
+model WorkflowDefinition {
+  id          String   @id @default(uuid())
+  name        String   @unique
+  description String?
+  steps       Json     // Array of step definitions: [{name, order, type, assigneeRole}]
+  transitions Json     // Array of transitions: [{from, to, condition}]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  instances WorkflowInstance[]
+}
+
+model WorkflowInstance {
+  id             String   @id @default(uuid())
+  definitionId   String
+  projectId      String?
+  status         String   @default("running") // running, completed, cancelled, failed
+  currentStepIdx Int      @default(0)
+  context        Json?    // Arbitrary workflow data (document ID, metadata, etc.)
+  startedAt      DateTime @default(now())
+  completedAt    DateTime?
+
+  definition    WorkflowDefinition @relation(fields: [definitionId], references: [id])
+  project       Project?            @relation(fields: [projectId], references: [id])
+  steps         WorkflowStep[]
+  changeRequest ChangeRequest?
+}
+
+model WorkflowStep {
+  id         String    @id @default(uuid())
+  instanceId String
+  name       String
+  order      Int
+  status     String    @default("pending") // pending, active, completed, rejected, skipped
+  assigneeId String?
+  action     String?   // approve, reject, complete, skip
+  comment    String?
+  startedAt  DateTime?
+  completedAt DateTime?
+  createdAt  DateTime  @default(now())
+
+  instance WorkflowInstance @relation(fields: [instanceId], references: [id], onDelete: Cascade)
+  assignee User?            @relation(fields: [assigneeId], references: [id])
+}
+
+// ==========================================
+// Equipment
+// ==========================================
+
+enum EquipmentCategory {
+  VESSEL
+  HEAT_EXCHANGER
+  ROTATING_MACHINE
+  MISCELLANEOUS
+}
+
+model Equipment {
+  id                   String            @id @default(uuid())
+  tagNumber            String            @unique
+  service              String
+  category             EquipmentCategory
+  subType              String?
+  quantity             Int               @default(1)
+  material             String?
+  operatingPressure    Float?
+  operatingTemperature Float?
+  designPressure       Float?
+  designTemperature    Float?
+  estimatedWeight      Float?
+  size                 String?
+  notes                String?
+  projectId            String
+  project              Project           @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  createdAt            DateTime          @default(now())
+  updatedAt            DateTime          @updatedAt
+
+  discussions    Discussion[]
+  changeRequests ChangeRequest[]
+  documents      Document[]
+}
+
+// ==========================================
+// Change Requests
+// ==========================================
+
+enum ChangeRequestStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+model ChangeRequest {
+  id                 String              @id @default(uuid())
+  equipmentId        String
+  requesterId        String
+  fieldName          String
+  oldValue           String?
+  newValue           String
+  justification      String?
+  status             ChangeRequestStatus @default(PENDING)
+  workflowInstanceId String?             @unique
+  createdAt          DateTime            @default(now())
+  updatedAt          DateTime            @updatedAt
+
+  equipment        Equipment         @relation(fields: [equipmentId], references: [id], onDelete: Cascade)
+  requester        User              @relation(fields: [requesterId], references: [id])
+  workflowInstance WorkflowInstance?  @relation(fields: [workflowInstanceId], references: [id])
+}
+
+// ==========================================
+// Vendors (approved supplier list)
+// ==========================================
+
+model Vendor {
+  id      String  @id @default(uuid())
+  name    String  @unique
+  country String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  specialties VendorEquipmentType[]
+  documents   Document[]
+}
+
+model VendorEquipmentType {
+  id            String @id @default(uuid())
+  vendorId      String
+  equipmentType String // e.g. "Centrifugal Pumps", "Ball Valves", "Control Valves"
+
+  vendor Vendor @relation(fields: [vendorId], references: [id], onDelete: Cascade)
+
+  @@unique([vendorId, equipmentType])
+}
+
+// ==========================================
+// Discussions (internal blog / forum)
+// ==========================================
+
+model Discussion {
+  id          String      @id @default(uuid())
+  title       String
+  content     String
+  authorId    String
+  projectId   String
+  equipmentId String?
+
+  author    User        @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  project   Project     @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  equipment Equipment?  @relation(fields: [equipmentId], references: [id], onDelete: SetNull)
+  comments  Comment[]
+  documents Document[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Comment {
+  id           String @id @default(uuid())
+  content      String
+  authorId     String
+  discussionId String
+
+  author     User       @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  discussion Discussion @relation(fields: [discussionId], references: [id], onDelete: Cascade)
+  documents  Document[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// ==========================================
+// Documents (file management)
+// ==========================================
+
+enum DocumentCategory {
+  DATASHEET
+  SPECIFICATION
+  DRAWING
+  CERTIFICATION
+  QUOTE
+  REPORT
+  MANUAL
+  OTHER
+}
+
+model Document {
+  id          String           @id @default(uuid())
+  fileName    String
+  fileSize    Int
+  mimeType    String
+  s3Key       String           @unique
+  category    DocumentCategory @default(OTHER)
+  description String?
+
+  uploadedById String
+  uploadedBy   User    @relation(fields: [uploadedById], references: [id])
+  projectId    String
+  project      Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  equipmentId  String?
+  equipment    Equipment?  @relation(fields: [equipmentId], references: [id], onDelete: SetNull)
+  vendorId     String?
+  vendor       Vendor?     @relation(fields: [vendorId], references: [id], onDelete: SetNull)
+  discussionId String?
+  discussion   Discussion? @relation(fields: [discussionId], references: [id], onDelete: SetNull)
+  commentId    String?
+  comment      Comment?    @relation(fields: [commentId], references: [id], onDelete: SetNull)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}

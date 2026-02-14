@@ -1,0 +1,181 @@
+# version: '3.8'
+
+services:
+  # PostgreSQL - Base de données principale
+  postgres:
+    image: postgres:15-alpine
+    container_name: zengineering-postgres
+    environment:
+      POSTGRES_DB: zengineering
+      POSTGRES_USER: zengineering
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-dev_password}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./database/init:/docker-entrypoint-initdb.d
+    networks:
+      - zengineering-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U zengineering"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # MongoDB - Documents et données non structurées
+  mongodb:
+    image: mongo:7.0
+    container_name: zengineering-mongodb
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: zengineering
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_PASSWORD:-dev_password}
+      MONGO_INITDB_DATABASE: zengineering
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+      - ./database/mongo-init:/docker-entrypoint-initdb.d
+    networks:
+      - zengineering-network
+    healthcheck:
+      test: echo 'db.runCommand("ping").ok' | mongosh localhost:27017/test --quiet
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Redis - Cache et sessions
+  redis:
+    image: redis:7-alpine
+    container_name: zengineering-redis
+    command: redis-server --requirepass ${REDIS_PASSWORD:-dev_password}
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - zengineering-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Elasticsearch - Recherche full-text
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.11.0
+    container_name: zengineering-elasticsearch
+    environment:
+      - discovery.type=single-node
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+      - xpack.security.enabled=false
+    ports:
+      - "9200:9200"
+      - "9300:9300"
+    volumes:
+      - elasticsearch_data:/usr/share/elasticsearch/data
+    networks:
+      - zengineering-network
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:9200/_cluster/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  # MinIO - Stockage S3-compatible (alternative locale à AWS S3)
+  minio:
+    image: minio/minio:latest
+    container_name: zengineering-minio
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-minioadmin}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-minioadmin}
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    volumes:
+      - minio_data:/data
+    networks:
+      - zengineering-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 30s
+      timeout: 20s
+      retries: 3
+
+  # Workflow engine is now built into the NestJS backend (no external Camunda needed)
+
+  # MailHog - Serveur SMTP de test (développement uniquement)
+  mailhog:
+    image: mailhog/mailhog:latest
+    container_name: zengineering-mailhog
+    ports:
+      - "1025:1025"  # SMTP
+      - "8025:8025"  # Interface web
+    networks:
+      - zengineering-network
+
+  # Backend API
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.dev
+    container_name: zengineering-backend
+    environment:
+      NODE_ENV: development
+      DATABASE_URL: postgresql://zengineering:${POSTGRES_PASSWORD:-dev_password}@postgres:5432/zengineering
+      MONGODB_URL: mongodb://zengineering:${MONGO_PASSWORD:-dev_password}@mongodb:27017/zengineering
+      REDIS_URL: redis://:${REDIS_PASSWORD:-dev_password}@redis:6379
+      ELASTICSEARCH_URL: http://elasticsearch:9200
+      MINIO_ENDPOINT: minio
+      MINIO_PORT: 9000
+      MINIO_ACCESS_KEY: ${MINIO_ROOT_USER:-minioadmin}
+      MINIO_SECRET_KEY: ${MINIO_ROOT_PASSWORD:-minioadmin}
+      SMTP_HOST: mailhog
+      SMTP_PORT: 1025
+      JWT_SECRET: ${JWT_SECRET:-dev_jwt_secret_change_in_production}
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./backend:/app
+      - /app/node_modules
+    depends_on:
+      postgres:
+        condition: service_healthy
+      mongodb:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - zengineering-network
+    command: npm run start:dev
+
+  # Frontend
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.dev
+    container_name: zengineering-frontend
+    environment:
+      REACT_APP_API_URL: http://localhost:3000
+      REACT_APP_WS_URL: ws://localhost:3000
+    ports:
+      - "3001:3001"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    depends_on:
+      - backend
+    networks:
+      - zengineering-network
+    command: npm start
+
+volumes:
+  postgres_data:
+  mongodb_data:
+  redis_data:
+  elasticsearch_data:
+  minio_data:
+
+networks:
+  zengineering-network:
+    driver: bridge
