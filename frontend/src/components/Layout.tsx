@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import {
   AppBar, Toolbar, Typography, IconButton, Drawer, List, ListItemButton,
-  ListItemIcon, ListItemText, Box, Avatar, Menu, MenuItem, Divider,
+  ListItemIcon, ListItemText, Box, Avatar, Menu, MenuItem, Divider, Button, Chip,
 } from '@mui/material';
 import {
   Menu as MenuIcon,
@@ -13,8 +13,12 @@ import {
   Store as VendorIcon,
   SwapHoriz as ChangeIcon,
   Folder as DocumentIcon,
+  ListAlt as RegisterIcon,
+  Send as SendIcon,
+  Inbox as InboxIcon,
 } from '@mui/icons-material';
 import { useAuth } from '../auth/AuthContext';
+import { useProject } from '../auth/ProjectContext';
 
 const DRAWER_WIDTH = 240;
 
@@ -24,16 +28,25 @@ const navItems = [
   { label: 'Discussions', path: '/discussions', icon: <DiscussionIcon /> },
   { label: 'My Tasks', path: '/tasks', icon: <TaskIcon /> },
   { label: 'Change Requests', path: '/change-requests', icon: <ChangeIcon /> },
+  { label: 'Doc Register', path: '/document-register', icon: <RegisterIcon /> },
+  { label: 'Transmittals', path: '/transmittals', icon: <SendIcon /> },
+  { label: 'Inbox', path: '/incoming-emails', icon: <InboxIcon /> },
   { label: 'Documents', path: '/documents', icon: <DocumentIcon /> },
   { label: 'Vendors', path: '/vendors', icon: <VendorIcon /> },
 ];
 
 export default function Layout() {
   const { user, logout } = useAuth();
+  const { project, clearProject } = useProject();
   const navigate = useNavigate();
   const location = useLocation();
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+
+  const handleSwitchProject = () => {
+    clearProject();
+    navigate('/select-project');
+  };
 
   return (
     <Box sx={{ display: 'flex' }}>
@@ -42,9 +55,28 @@ export default function Layout() {
           <IconButton color="inherit" edge="start" onClick={() => setDrawerOpen(!drawerOpen)} sx={{ mr: 2 }}>
             <MenuIcon />
           </IconButton>
-          <Typography variant="h6" noWrap sx={{ flexGrow: 1 }}>
+          <Typography variant="h6" noWrap sx={{ mr: 2 }}>
             Zen-gineering
           </Typography>
+          {project && (
+            <>
+              <Chip
+                label={project.name}
+                size="small"
+                sx={{ bgcolor: 'rgba(255,255,255,0.15)', color: 'white', mr: 1 }}
+              />
+              <Button
+                size="small"
+                variant="outlined"
+                color="inherit"
+                onClick={handleSwitchProject}
+                sx={{ mr: 2, textTransform: 'none', borderColor: 'rgba(255,255,255,0.3)' }}
+              >
+                Switch
+              </Button>
+            </>
+          )}
+          <Box sx={{ flexGrow: 1 }} />
           <Typography variant="body2" sx={{ mr: 2 }}>
             {user?.name} ({user?.discipline ?? user?.role})
           </Typography>

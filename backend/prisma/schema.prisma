@@ -36,6 +36,9 @@ model User {
   comments       Comment[]
   changeRequests ChangeRequest[]
   documents      Document[]
+  ownedDocumentEntries  DocumentRegisterEntry[] @relation("DocumentOwner")
+  issuedDocumentEntries DocumentRegisterEntry[] @relation("DocumentIssuer")
+  transmittals   Transmittal[]
 }
 
 model Project {
@@ -46,11 +49,20 @@ model Project {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  members     ProjectMember[]
-  workflows   WorkflowInstance[]
-  equipment   Equipment[]
-  discussions Discussion[]
-  documents   Document[]
+  clientName    String?
+  clientContact String?
+  projectEmail  String?
+
+  members         ProjectMember[]
+  partners        ProjectPartner[]
+  projectVendors  ProjectVendor[]
+  workflows       WorkflowInstance[]
+  equipment       Equipment[]
+  discussions     Discussion[]
+  documents       Document[]
+  documentEntries DocumentRegisterEntry[]
+  transmittals    Transmittal[]
+  incomingEmails  IncomingEmail[]
 }
 
 model ProjectMember {
@@ -190,8 +202,10 @@ model Vendor {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  specialties VendorEquipmentType[]
-  documents   Document[]
+  specialties    VendorEquipmentType[]
+  documents      Document[]
+  projectVendors ProjectVendor[]
+  transmittals   Transmittal[]
 }
 
 model VendorEquipmentType {
@@ -278,6 +292,163 @@ model Document {
   commentId    String?
   comment      Comment?    @relation(fields: [commentId], references: [id], onDelete: SetNull)
 
+  registerEntryId String?
+  registerEntry   DocumentRegisterEntry? @relation(fields: [registerEntryId], references: [id], onDelete: SetNull)
+
+  incomingEmailId String?
+  incomingEmail   IncomingEmail? @relation(fields: [incomingEmailId], references: [id], onDelete: SetNull)
+
+  transmittalItems TransmittalItem[]
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+// ==========================================
+// Project Partners & Vendors
+// ==========================================
+
+model ProjectPartner {
+  id           String  @id @default(uuid())
+  projectId    String
+  name         String
+  role         String? // e.g. "EPC Contractor", "Licensor", "FEED Engineer"
+  contactName  String?
+  contactEmail String?
+
+  project      Project       @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  transmittals Transmittal[]
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+}
+
+model ProjectVendor {
+  id        String  @id @default(uuid())
+  projectId String
+  vendorId  String
+  notes     String? // e.g. "Selected for pumps", "Under evaluation"
+
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  vendor  Vendor  @relation(fields: [vendorId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@unique([projectId, vendorId])
+}
+
+// ==========================================
+// Document Register (formal deliverables)
+// ==========================================
+
+enum DocRegisterStatus {
+  DRAFT
+  FOR_REVIEW
+  FOR_APPROVAL
+  APPROVED
+  SUPERSEDED
+  CANCELLED
+}
+
+model DocumentRegisterEntry {
+  id             String           @id @default(uuid())
+  projectId      String
+  documentNumber String           // e.g. "ZG-125-PRC-001"
+  title          String
+  discipline     Discipline
+  ownerId        String
+  issuerId       String?
+  revision       String           @default("A")
+  status         DocRegisterStatus @default(DRAFT)
+  issueDate      DateTime?
+  description    String?
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+
+  project   Project    @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  owner     User       @relation("DocumentOwner", fields: [ownerId], references: [id])
+  issuer    User?      @relation("DocumentIssuer", fields: [issuerId], references: [id])
+  revisions Document[]
+  transmittalItems TransmittalItem[]
+
+  @@unique([projectId, documentNumber])
+}
+
+// ==========================================
+// Email & Document Exchange
+// ==========================================
+
+enum TransmittalPurpose {
+  FOR_REVIEW
+  FOR_APPROVAL
+  FOR_INFORMATION
+  FOR_CONSTRUCTION
+  AS_BUILT
+}
+
+enum TransmittalStatus {
+  DRAFT
+  SENT
+  ACKNOWLEDGED
+}
+
+enum IncomingEmailStatus {
+  UNREAD
+  READ
+  ARCHIVED
+}
+
+model Transmittal {
+  id                 String             @id @default(uuid())
+  projectId          String
+  transmittalNumber  String             // e.g. "ZG-125-TR-001"
+  subject            String
+  purpose            TransmittalPurpose
+  recipientName      String
+  recipientEmail     String
+  recipientType      String             // VENDOR, PARTNER, CLIENT, OTHER
+  vendorId           String?
+  partnerId          String?
+  coverLetter        String?
+  sentById           String
+  sentAt             DateTime?
+  status             TransmittalStatus  @default(DRAFT)
+  createdAt          DateTime           @default(now())
+  updatedAt          DateTime           @updatedAt
+
+  project  Project         @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  sentBy   User            @relation(fields: [sentById], references: [id])
+  vendor   Vendor?         @relation(fields: [vendorId], references: [id], onDelete: SetNull)
+  partner  ProjectPartner? @relation(fields: [partnerId], references: [id], onDelete: SetNull)
+  items    TransmittalItem[]
+
+  @@unique([projectId, transmittalNumber])
+}
+
+model TransmittalItem {
+  id              String  @id @default(uuid())
+  transmittalId   String
+  documentId      String?
+  registerEntryId String?
+  remarks         String?
+
+  transmittal   Transmittal            @relation(fields: [transmittalId], references: [id], onDelete: Cascade)
+  document      Document?              @relation(fields: [documentId], references: [id], onDelete: SetNull)
+  registerEntry DocumentRegisterEntry? @relation(fields: [registerEntryId], references: [id], onDelete: SetNull)
+}
+
+model IncomingEmail {
+  id          String             @id @default(uuid())
+  projectId   String
+  messageId   String             @unique // IMAP Message-ID for dedup
+  fromAddress String
+  fromName    String?
+  toAddress   String
+  subject     String
+  bodyText    String?
+  bodyHtml    String?
+  receivedAt  DateTime
+  status      IncomingEmailStatus @default(UNREAD)
+  createdAt   DateTime           @default(now())
+
+  project     Project    @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  attachments Document[]
 }

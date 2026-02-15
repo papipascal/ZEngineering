@@ -6,6 +6,7 @@ import {
 import { Check as ApproveIcon, Close as RejectIcon } from '@mui/icons-material';
 import { useAuth } from '../auth/AuthContext';
 import { workflowApi, WorkflowStep } from '../api/workflows';
+import ExportExcelButton from '../components/ExportExcelButton';
 
 export default function MyTasksPage() {
   const { user } = useAuth();
@@ -46,7 +47,19 @@ export default function MyTasksPage() {
 
   return (
     <>
-      <Typography variant="h4" gutterBottom>My Tasks</Typography>
+      <Stack direction="row" justifyContent="space-between" alignItems="center" mb={1}>
+        <Typography variant="h4">My Tasks</Typography>
+        <ExportExcelButton
+          data={myTasks.map((t) => ({ ...t, workflowName: t.instance?.definition?.name ?? '', projectName: t.instance?.project?.name ?? '', stepOrder: t.order + 1 })) as unknown as Record<string, unknown>[]}
+          columns={[
+            { key: 'name', header: 'Task' },
+            { key: 'workflowName', header: 'Workflow' },
+            { key: 'projectName', header: 'Project' },
+            { key: 'stepOrder', header: 'Step' },
+          ]}
+          fileName="my-tasks"
+        />
+      </Stack>
 
       {success && <Alert severity="success" sx={{ mb: 2 }} onClose={() => setSuccess('')}>{success}</Alert>}
 

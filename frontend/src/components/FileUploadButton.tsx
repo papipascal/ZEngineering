@@ -9,6 +9,7 @@ interface Props {
   vendorId?: string;
   discussionId?: string;
   commentId?: string;
+  registerEntryId?: string;
   category?: string;
   onUploaded: (doc: Document) => void;
   label?: string;
@@ -16,7 +17,7 @@ interface Props {
 }
 
 export default function FileUploadButton({
-  projectId, equipmentId, vendorId, discussionId, commentId, category,
+  projectId, equipmentId, vendorId, discussionId, commentId, registerEntryId, category,
   onUploaded, label = 'Upload file', size = 'small',
 }: Props) {
   const inputRef = useRef<HTMLInputElement>(null);
@@ -28,7 +29,7 @@ export default function FileUploadButton({
     setUploading(true);
     try {
       const res = await documentApi.upload(file, {
-        projectId, equipmentId, vendorId, discussionId, commentId, category,
+        projectId, equipmentId, vendorId, discussionId, commentId, registerEntryId, category,
       });
       onUploaded(res.data);
     } catch (err) {

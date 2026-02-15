@@ -1,5 +1,5 @@
 import 'dotenv/config';
-import { PrismaClient, EquipmentCategory, Discipline } from '@prisma/client';
+import { PrismaClient, EquipmentCategory, Discipline, DocRegisterStatus, TransmittalPurpose } from '@prisma/client';
 import * as bcrypt from 'bcryptjs';
 
 const prisma = new PrismaClient();
@@ -63,6 +63,9 @@ async function main() {
         name: 'Mon Chemical Plant - Unit U_A',
         description: 'New Package for chemical plant - Project MY_ONE, Client 1',
         status: 'active',
+        clientName: 'Alphahexol Industries',
+        clientContact: 'john.smith@alphahexol.com',
+        projectEmail: 'ua-unit@zengineering.local',
         members: {
           create: [
             { userId: admin.id, role: 'owner' },
@@ -74,6 +77,17 @@ async function main() {
     });
     console.log(`Created project: ${project.name}`);
   } else {
+    // Update existing project with client info if missing
+    if (!project.clientName || !project.projectEmail) {
+      project = await prisma.project.update({
+        where: { id: project.id },
+        data: {
+          clientName: project.clientName || 'Alphahexol Industries',
+          clientContact: project.clientContact || 'john.smith@alphahexol.com',
+          projectEmail: project.projectEmail || 'ua-unit@zengineering.local',
+        },
+      });
+    }
     console.log(`Project already exists: ${project.name}`);
   }
 
@@ -737,6 +751,144 @@ async function main() {
       },
     });
     console.log(`Created discussion: ${discussion3.title}`);
+  }
+
+  // ==========================================
+  // Project Partners
+  // ==========================================
+
+  const existingPartner = await prisma.projectPartner.findFirst({
+    where: { projectId: project.id, name: 'Licensor Technologies Ltd.' },
+  });
+  if (!existingPartner) {
+    await prisma.projectPartner.create({
+      data: {
+        projectId: project.id,
+        name: 'Licensor Technologies Ltd.',
+        role: 'Licensor',
+        contactName: 'Dr. Sarah Chen',
+        contactEmail: 'sarah.chen@licensortech.com',
+      },
+    });
+    await prisma.projectPartner.create({
+      data: {
+        projectId: project.id,
+        name: 'EPC Global Engineering',
+        role: 'EPC Contractor',
+        contactName: 'Pierre Lemoine',
+        contactEmail: 'p.lemoine@epcglobal.fr',
+      },
+    });
+    console.log('Created project partners');
+  }
+
+  // ==========================================
+  // Project Vendors (link some vendors to project)
+  // ==========================================
+
+  const sulzer = await prisma.vendor.findUnique({ where: { name: 'SULZER' } });
+  const mouvex = await prisma.vendor.findUnique({ where: { name: 'MOUVEX' } });
+  const leser = await prisma.vendor.findUnique({ where: { name: 'LESER' } });
+
+  for (const v of [
+    { vendor: sulzer, notes: 'Selected for centrifugal pumps' },
+    { vendor: mouvex, notes: 'Under evaluation for gear pumps' },
+    { vendor: leser, notes: 'Selected for pressure safety valves' },
+  ]) {
+    if (v.vendor) {
+      await prisma.projectVendor.upsert({
+        where: { projectId_vendorId: { projectId: project.id, vendorId: v.vendor.id } },
+        update: {},
+        create: { projectId: project.id, vendorId: v.vendor.id, notes: v.notes },
+      });
+    }
+  }
+  console.log('Created project vendor assignments');
+
+  // ==========================================
+  // Document Register Entries
+  // ==========================================
+
+  const registerEntries = [
+    {
+      documentNumber: 'ZG-125-PRC-001',
+      title: 'Process Flow Diagram - Unit U_A',
+      discipline: Discipline.PROCESS,
+      ownerId: admin.id,
+      issuerId: manager.id,
+      revision: 'B',
+      status: DocRegisterStatus.APPROVED,
+      issueDate: new Date('2026-01-15'),
+      description: 'Overall process flow diagram for Alphahexol regeneration unit',
+    },
+    {
+      documentNumber: 'ZG-125-PRC-002',
+      title: 'P&ID - Catalyst Filtration Section',
+      discipline: Discipline.PROCESS,
+      ownerId: admin.id,
+      revision: 'A',
+      status: DocRegisterStatus.FOR_REVIEW,
+      description: 'Piping & Instrumentation Diagram for catalyst filtration area (125-NF-601 A/B)',
+    },
+    {
+      documentNumber: 'ZG-125-MEC-001',
+      title: 'Datasheet - Blowdown Drum 125-VV-601',
+      discipline: Discipline.MECHANICAL,
+      ownerId: reviewer.id,
+      revision: 'A',
+      status: DocRegisterStatus.DRAFT,
+      description: 'Mechanical datasheet for vertical blowdown drum',
+    },
+  ];
+
+  for (const entry of registerEntries) {
+    await prisma.documentRegisterEntry.upsert({
+      where: {
+        projectId_documentNumber: { projectId: project.id, documentNumber: entry.documentNumber },
+      },
+      update: {},
+      create: { projectId: project.id, ...entry },
+    });
+  }
+  console.log(`Created ${registerEntries.length} document register entries`);
+
+  // ==========================================
+  // Sample Transmittal
+  // ==========================================
+
+  const existingTransmittal = await prisma.transmittal.findFirst({
+    where: { projectId: project.id, transmittalNumber: 'MONCHE-TR-001' },
+  });
+  if (!existingTransmittal) {
+    const pfdEntry = await prisma.documentRegisterEntry.findFirst({
+      where: { projectId: project.id, documentNumber: 'ZG-125-PRC-001' },
+    });
+    const pidEntry = await prisma.documentRegisterEntry.findFirst({
+      where: { projectId: project.id, documentNumber: 'ZG-125-PRC-002' },
+    });
+
+    await prisma.transmittal.create({
+      data: {
+        projectId: project.id,
+        transmittalNumber: 'MONCHE-TR-001',
+        subject: 'Process Flow Diagrams - For Review',
+        purpose: TransmittalPurpose.FOR_REVIEW,
+        recipientName: 'Dr. Sarah Chen',
+        recipientEmail: 'sarah.chen@licensortech.com',
+        recipientType: 'PARTNER',
+        sentById: manager.id,
+        status: 'SENT',
+        sentAt: new Date('2026-02-10'),
+        coverLetter: 'Please find attached the process flow diagrams for Unit U_A. Kindly review and provide your comments within 2 weeks.',
+        items: {
+          create: [
+            ...(pfdEntry ? [{ registerEntryId: pfdEntry.id, remarks: 'Rev B - updated per licensor comments' }] : []),
+            ...(pidEntry ? [{ registerEntryId: pidEntry.id, remarks: 'Rev A - initial issue' }] : []),
+          ],
+        },
+      },
+    });
+    console.log('Created sample transmittal');
   }
 
   console.log('\nSeed completed successfully!');

@@ -41,6 +41,7 @@ export const documentApi = {
     vendorId?: string;
     discussionId?: string;
     commentId?: string;
+    registerEntryId?: string;
   }) => {
     const formData = new FormData();
     formData.append('file', file);

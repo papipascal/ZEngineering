@@ -5,35 +5,28 @@ import {
 } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
 import { documentApi, Document as DocType } from '../api/documents';
-import { equipmentApi } from '../api/equipment';
 import DocumentList from '../components/DocumentList';
 import FileUploadButton from '../components/FileUploadButton';
+import { useProjectId } from '../auth/ProjectContext';
+import ExportExcelButton from '../components/ExportExcelButton';
 
 const CATEGORIES = ['ALL', 'DATASHEET', 'SPECIFICATION', 'DRAWING', 'CERTIFICATION', 'QUOTE', 'REPORT', 'MANUAL', 'OTHER'];
 
 export default function DocumentsPage() {
+  const projectId = useProjectId();
   const [documents, setDocuments] = useState<DocType[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [category, setCategory] = useState('ALL');
-  const [projectId, setProjectId] = useState('');
-
-  useEffect(() => {
-    // Get project ID from first equipment item
-    equipmentApi.list().then((r) => {
-      if (r.data.length > 0) {
-        setProjectId(r.data[0].projectId);
-      }
-    });
-  }, []);
 
   useEffect(() => {
     loadDocs();
-  }, [category, search]);
+  }, [category, search, projectId]);
 
   const loadDocs = () => {
     setLoading(true);
     documentApi.list({
+      projectId: projectId || undefined,
       category: category !== 'ALL' ? category : undefined,
       search: search || undefined,
     })
@@ -53,14 +46,27 @@ export default function DocumentsPage() {
     <>
       <Stack direction="row" justifyContent="space-between" alignItems="center" mb={3}>
         <Typography variant="h4">Project Documents</Typography>
-        {projectId && (
-          <FileUploadButton
-            projectId={projectId}
-            onUploaded={handleUploaded}
-            label="Upload Document"
-            size="medium"
+        <Stack direction="row" spacing={1}>
+          <ExportExcelButton
+            data={documents as unknown as Record<string, unknown>[]}
+            columns={[
+              { key: 'fileName', header: 'File Name' },
+              { key: 'category', header: 'Category' },
+              { key: 'mimeType', header: 'Type' },
+              { key: 'fileSize', header: 'Size (bytes)' },
+              { key: 'createdAt', header: 'Uploaded' },
+            ]}
+            fileName="documents"
           />
-        )}
+          {projectId && (
+            <FileUploadButton
+              projectId={projectId}
+              onUploaded={handleUploaded}
+              label="Upload Document"
+              size="medium"
+            />
+          )}
+        </Stack>
       </Stack>
 
       <Stack direction="row" spacing={2} mb={3}>

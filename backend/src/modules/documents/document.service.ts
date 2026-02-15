@@ -46,6 +46,7 @@ export class DocumentService {
         vendorId: dto.vendorId,
         discussionId: dto.discussionId,
         commentId: dto.commentId,
+        registerEntryId: dto.registerEntryId,
       },
       include: DOC_INCLUDE,
     });

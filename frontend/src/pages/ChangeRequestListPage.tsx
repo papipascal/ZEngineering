@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react';
 import {
   Typography, Table, TableBody, TableCell, TableContainer, TableHead,
-  TableRow, Paper, Chip, Box, CircularProgress,
+  TableRow, Paper, Chip, Box, CircularProgress, Stack,
 } from '@mui/material';
 import { changeRequestApi, ChangeRequest } from '../api/change-requests';
+import ExportExcelButton from '../components/ExportExcelButton';
 
 const STATUS_COLOR: Record<string, 'warning' | 'success' | 'error'> = {
   PENDING: 'warning',
@@ -23,7 +24,22 @@ export default function ChangeRequestListPage() {
 
   return (
     <>
-      <Typography variant="h4" gutterBottom>Change Requests</Typography>
+      <Stack direction="row" justifyContent="space-between" alignItems="center" mb={2}>
+        <Typography variant="h4">Change Requests</Typography>
+        <ExportExcelButton
+          data={requests.map((cr) => ({ ...cr, equipmentTag: cr.equipment.tagNumber, requesterName: cr.requester.name, dateStr: new Date(cr.createdAt).toLocaleDateString() })) as unknown as Record<string, unknown>[]}
+          columns={[
+            { key: 'equipmentTag', header: 'Equipment' },
+            { key: 'fieldName', header: 'Field' },
+            { key: 'oldValue', header: 'Old Value' },
+            { key: 'newValue', header: 'New Value' },
+            { key: 'requesterName', header: 'Requester' },
+            { key: 'status', header: 'Status' },
+            { key: 'dateStr', header: 'Date' },
+          ]}
+          fileName="change-requests"
+        />
+      </Stack>
 
       <TableContainer component={Paper}>
         <Table size="small">

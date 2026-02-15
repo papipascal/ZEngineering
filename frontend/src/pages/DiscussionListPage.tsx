@@ -8,10 +8,13 @@ import {
 import { Search as SearchIcon, Add as AddIcon } from '@mui/icons-material';
 import { useAuth } from '../auth/AuthContext';
 import { discussionApi, Discussion } from '../api/discussions';
+import { useProjectId } from '../auth/ProjectContext';
+import ExportExcelButton from '../components/ExportExcelButton';
 
 export default function DiscussionListPage() {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const projectId = useProjectId();
   const [discussions, setDiscussions] = useState<Discussion[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
@@ -22,10 +25,13 @@ export default function DiscussionListPage() {
 
   const load = () => {
     setLoading(true);
-    discussionApi.list(search ? { search } : {}).then((r) => setDiscussions(r.data)).finally(() => setLoading(false));
+    const params: Record<string, string> = {};
+    if (projectId) params.projectId = projectId;
+    if (search) params.search = search;
+    discussionApi.list(params).then((r) => setDiscussions(r.data)).finally(() => setLoading(false));
   };
 
-  useEffect(() => { load(); }, [search]);
+  useEffect(() => { load(); }, [search, projectId]);
 
   const handleCreate = async () => {
     setError('');
@@ -34,7 +40,7 @@ export default function DiscussionListPage() {
         title,
         content,
         authorId: user!.id,
-        projectId: discussions[0]?.projectId || '',
+        projectId: projectId || discussions[0]?.projectId || '',
       });
       setDialogOpen(false);
       setTitle('');
@@ -50,9 +56,20 @@ export default function DiscussionListPage() {
     <>
       <Stack direction="row" justifyContent="space-between" alignItems="center" mb={2}>
         <Typography variant="h4">Discussions</Typography>
-        <Button variant="contained" startIcon={<AddIcon />} onClick={() => setDialogOpen(true)}>
-          New Discussion
-        </Button>
+        <Stack direction="row" spacing={1}>
+          <ExportExcelButton
+            data={discussions as unknown as Record<string, unknown>[]}
+            columns={[
+              { key: 'title', header: 'Title' },
+              { key: 'content', header: 'Content' },
+              { key: 'createdAt', header: 'Date' },
+            ]}
+            fileName="discussions"
+          />
+          <Button variant="contained" startIcon={<AddIcon />} onClick={() => setDialogOpen(true)}>
+            New Discussion
+          </Button>
+        </Stack>
       </Stack>
 
       <TextField

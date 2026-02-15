@@ -2,10 +2,12 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Typography, Table, TableBody, TableCell, TableContainer, TableHead, TableRow,
-  Paper, Tabs, Tab, TextField, Box, Chip, InputAdornment, CircularProgress,
+  Paper, Tabs, Tab, TextField, Box, Chip, InputAdornment, CircularProgress, Stack,
 } from '@mui/material';
 import { Search as SearchIcon } from '@mui/icons-material';
 import { equipmentApi, Equipment } from '../api/equipment';
+import { useProjectId } from '../auth/ProjectContext';
+import ExportExcelButton from '../components/ExportExcelButton';
 
 const CATEGORIES = ['ALL', 'VESSEL', 'HEAT_EXCHANGER', 'ROTATING_MACHINE', 'MISCELLANEOUS'];
 const CATEGORY_LABELS: Record<string, string> = {
@@ -18,6 +20,7 @@ const CATEGORY_LABELS: Record<string, string> = {
 
 export default function EquipmentListPage() {
   const navigate = useNavigate();
+  const projectId = useProjectId();
   const [equipment, setEquipment] = useState<Equipment[]>([]);
   const [loading, setLoading] = useState(true);
   const [category, setCategory] = useState('ALL');
@@ -26,14 +29,30 @@ export default function EquipmentListPage() {
   useEffect(() => {
     setLoading(true);
     const params: Record<string, string> = {};
+    if (projectId) params.projectId = projectId;
     if (category !== 'ALL') params.category = category;
     if (search) params.search = search;
     equipmentApi.list(params).then((r) => setEquipment(r.data)).finally(() => setLoading(false));
-  }, [category, search]);
+  }, [category, search, projectId]);
 
   return (
     <>
-      <Typography variant="h4" gutterBottom>Equipment</Typography>
+      <Stack direction="row" justifyContent="space-between" alignItems="center" mb={1}>
+        <Typography variant="h4">Equipment</Typography>
+        <ExportExcelButton
+          data={equipment as unknown as Record<string, unknown>[]}
+          columns={[
+            { key: 'tagNumber', header: 'Tag Number' },
+            { key: 'service', header: 'Service' },
+            { key: 'category', header: 'Category' },
+            { key: 'subType', header: 'Sub-Type' },
+            { key: 'material', header: 'Material' },
+            { key: 'operatingPressure', header: 'Op. Pressure (barg)' },
+            { key: 'operatingTemperature', header: 'Op. Temp. (°C)' },
+          ]}
+          fileName="equipment-list"
+        />
+      </Stack>
 
       <Box display="flex" alignItems="center" gap={2} mb={2}>
         <Tabs value={category} onChange={(_, v) => setCategory(v)} variant="scrollable">

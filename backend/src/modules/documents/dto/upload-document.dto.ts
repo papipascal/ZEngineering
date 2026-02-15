@@ -36,4 +36,9 @@ export class UploadDocumentDto {
   @IsOptional()
   @IsUUID()
   commentId?: string;
+
+  @ApiProperty({ required: false, description: 'Link to a Document Register entry as a file revision' })
+  @IsOptional()
+  @IsUUID()
+  registerEntryId?: string;
 }

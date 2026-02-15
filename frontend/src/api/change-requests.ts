@@ -26,8 +26,8 @@ export const changeRequestApi = {
   create: (data: { equipmentId: string; fieldName: string; newValue: string; justification?: string }) =>
     client.post<ChangeRequest>('/api/change-requests', data),
 
-  list: (projectId?: string) =>
-    client.get<ChangeRequest[]>('/api/change-requests', { params: projectId ? { projectId } : {} }),
+  list: (params?: { projectId?: string; status?: string }) =>
+    client.get<ChangeRequest[]>('/api/change-requests', { params }),
 
   getById: (id: string) =>
     client.get<ChangeRequest>(`/api/change-requests/${id}`),

@@ -6,6 +6,7 @@ import {
 } from '@mui/material';
 import { Search as SearchIcon } from '@mui/icons-material';
 import { discussionApi } from '../api/discussions';
+import ExportExcelButton from '../components/ExportExcelButton';
 
 interface Vendor {
   id: string;
@@ -30,7 +31,18 @@ export default function VendorListPage() {
 
   return (
     <>
-      <Typography variant="h4" gutterBottom>Approved Vendors</Typography>
+      <Stack direction="row" justifyContent="space-between" alignItems="center" mb={1}>
+        <Typography variant="h4">Approved Vendors</Typography>
+        <ExportExcelButton
+          data={vendors.map((v) => ({ ...v, specialtiesList: v.specialties.map((s) => s.equipmentType).join(', ') })) as unknown as Record<string, unknown>[]}
+          columns={[
+            { key: 'name', header: 'Vendor' },
+            { key: 'country', header: 'Country' },
+            { key: 'specialtiesList', header: 'Specialties' },
+          ]}
+          fileName="vendors"
+        />
+      </Stack>
 
       <TextField
         size="small"

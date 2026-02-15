@@ -9,6 +9,10 @@ import { EquipmentModule } from './modules/equipment/equipment.module.js';
 import { DiscussionModule } from './modules/discussions/discussion.module.js';
 import { ChangeRequestModule } from './modules/change-requests/change-request.module.js';
 import { DocumentModule } from './modules/documents/document.module.js';
+import { ProjectModule } from './modules/projects/project.module.js';
+import { DocumentRegisterModule } from './modules/document-register/document-register.module.js';
+import { TransmittalModule } from './modules/transmittals/transmittal.module.js';
+import { IncomingEmailModule } from './modules/incoming-emails/incoming-email.module.js';
 import { AppController } from './app.controller.js';
 import { AppService } from './app.service.js';
 
@@ -24,6 +28,10 @@ import { AppService } from './app.service.js';
     DiscussionModule,
     ChangeRequestModule,
     DocumentModule,
+    ProjectModule,
+    DocumentRegisterModule,
+    TransmittalModule,
+    IncomingEmailModule,
   ],
   controllers: [AppController],
   providers: [AppService],
