@@ -3,7 +3,7 @@ import {
 } from '@mui/material';
 import {
   Engineering, GitHub, OpenInNew, CheckCircle, Storage, Code, Email,
-  Description, Assignment, People, Settings,
+  Description, Assignment, People, Settings, RocketLaunch,
 } from '@mui/icons-material';
 
 const FEATURES = [
@@ -34,6 +34,14 @@ export default function ZEngineeringPage() {
                 Full-Stack Engineering Project Management Platform
               </Typography>
               <Stack direction="row" spacing={2} flexWrap="wrap" useFlexGap>
+                <Button
+                  variant="contained"
+                  startIcon={<RocketLaunch />}
+                  href="/zengineering-app/"
+                  sx={{ bgcolor: 'rgba(255,255,255,0.25)', color: 'white', '&:hover': { bgcolor: 'rgba(255,255,255,0.4)' } }}
+                >
+                  Launch App
+                </Button>
                 <Button
                   variant="contained"
                   startIcon={<GitHub />}
