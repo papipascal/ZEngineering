@@ -1,9 +1,10 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException, Optional, Inject } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import { PrismaService } from '../../prisma/prisma.service.js';
 import { CreateDefinitionDto } from './dto/create-definition.dto.js';
 import { StartWorkflowDto } from './dto/start-workflow.dto.js';
 import { CompleteStepDto } from './dto/complete-step.dto.js';
+import { NotificationService } from '../notifications/notification.service.js';
 
 interface StepDef {
   name: string;
@@ -12,9 +13,25 @@ interface StepDef {
   assigneeRole?: string;
 }
 
+/** Maps workflow assigneeRole values to ProjectOrganization role keys */
+const ROLE_TO_ORG_MAPPING: Record<string, string[]> = {
+  lead: [
+    'process_lead', 'layout_lead', 'civil_lead', 'piping_lead',
+    'vessels_lead', 'machine_lead', 'electrical_lead', 'instrument_lead',
+    'engineering_manager',
+  ],
+  chef_de_projet: ['chef_de_projet'],
+  manager: ['chef_de_projet', 'engineering_manager', 'procurement_manager', 'construction_manager'],
+  admin: ['sponsor', 'chef_de_projet'],
+  member: [], // members are not auto-resolved from org chart
+};
+
 @Injectable()
 export class WorkflowService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    @Optional() private readonly notifications?: NotificationService,
+  ) {}
 
   // ==========================================
   // Definitions
@@ -60,6 +77,11 @@ export class WorkflowService {
 
     const stepDefs = definition.steps as unknown as StepDef[];
 
+    // Auto-resolve assignees from ProjectOrganization
+    const assigneeMap = dto.projectId
+      ? await this.resolveAssigneesFromOrg(dto.projectId, stepDefs)
+      : new Map<number, string>();
+
     // Create instance with all steps
     const instance = await this.prisma.workflowInstance.create({
       data: {
@@ -76,11 +98,28 @@ export class WorkflowService {
             order: s.order,
             status: idx === 0 ? 'active' : 'pending',
             startedAt: idx === 0 ? new Date() : null,
+            assigneeId: assigneeMap.get(s.order) ?? null,
           })),
         },
       },
-      include: { steps: { orderBy: { order: 'asc' } } },
+      include: {
+        steps: { orderBy: { order: 'asc' } },
+        definition: { select: { name: true } },
+        project: { select: { id: true, name: true } },
+      },
     });
+
+    // Notify first step assignee
+    const firstStep = instance.steps[0];
+    if (firstStep?.assigneeId && this.notifications) {
+      this.notifications.notifyWorkflowAssigned({
+        userId: firstStep.assigneeId,
+        projectId: dto.projectId ?? '',
+        workflowName: instance.definition.name,
+        stepName: firstStep.name,
+        instanceId: instance.id,
+      });
+    }
 
     return instance;
   }
@@ -89,7 +128,10 @@ export class WorkflowService {
     const instance = await this.prisma.workflowInstance.findUnique({
       where: { id },
       include: {
-        steps: { orderBy: { order: 'asc' } },
+        steps: {
+          orderBy: { order: 'asc' },
+          include: { assignee: { select: { id: true, name: true, email: true } } },
+        },
         definition: true,
         project: true,
       },
@@ -103,7 +145,10 @@ export class WorkflowService {
       where: projectId ? { projectId } : undefined,
       include: {
         definition: { select: { name: true } },
-        steps: { orderBy: { order: 'asc' } },
+        steps: {
+          orderBy: { order: 'asc' },
+          include: { assignee: { select: { id: true, name: true } } },
+        },
       },
       orderBy: { startedAt: 'desc' },
     });
@@ -116,7 +161,11 @@ export class WorkflowService {
   async completeStep(instanceId: string, stepId: string, dto: CompleteStepDto) {
     const instance = await this.prisma.workflowInstance.findUnique({
       where: { id: instanceId },
-      include: { steps: { orderBy: { order: 'asc' } } },
+      include: {
+        steps: { orderBy: { order: 'asc' } },
+        definition: { select: { name: true } },
+        project: { select: { id: true, name: true } },
+      },
     });
     if (!instance) throw new NotFoundException(`Instance ${instanceId} not found`);
     if (instance.status !== 'running') {
@@ -150,6 +199,16 @@ export class WorkflowService {
         data: { status: 'failed', completedAt: now },
       });
       await this.resolveChangeRequest(instanceId, false);
+
+      if (this.notifications && instance.projectId) {
+        this.notifications.notifyWorkflowRejected({
+          projectId: instance.projectId,
+          workflowName: instance.definition.name,
+          instanceId,
+          stepName: step.name,
+        });
+      }
+
       return this.getInstance(instanceId);
     }
 
@@ -167,6 +226,17 @@ export class WorkflowService {
         where: { id: instanceId },
         data: { currentStepIdx: nextStepIdx },
       });
+
+      // Notify next step assignee
+      if (nextStep.assigneeId && this.notifications && instance.projectId) {
+        this.notifications.notifyWorkflowAssigned({
+          userId: nextStep.assigneeId,
+          projectId: instance.projectId,
+          workflowName: instance.definition.name,
+          stepName: nextStep.name,
+          instanceId,
+        });
+      }
     } else {
       // No more steps: workflow complete
       await this.prisma.workflowInstance.update({
@@ -174,6 +244,14 @@ export class WorkflowService {
         data: { status: 'completed', completedAt: now },
       });
       await this.resolveChangeRequest(instanceId, true);
+
+      if (this.notifications && instance.projectId) {
+        this.notifications.notifyWorkflowCompleted({
+          projectId: instance.projectId,
+          workflowName: instance.definition.name,
+          instanceId,
+        });
+      }
     }
 
     return this.getInstance(instanceId);
@@ -215,6 +293,42 @@ export class WorkflowService {
       },
       orderBy: { startedAt: 'asc' },
     });
+  }
+
+  // ==========================================
+  // Auto-assignment from ProjectOrganization
+  // ==========================================
+
+  private async resolveAssigneesFromOrg(
+    projectId: string,
+    stepDefs: StepDef[],
+  ): Promise<Map<number, string>> {
+    const assigneeMap = new Map<number, string>();
+
+    const orgPositions = await this.prisma.projectOrganization.findMany({
+      where: { projectId, userId: { not: null } },
+      select: { role: true, userId: true },
+    });
+
+    if (orgPositions.length === 0) return assigneeMap;
+
+    for (const stepDef of stepDefs) {
+      if (!stepDef.assigneeRole) continue;
+
+      const orgRoles = ROLE_TO_ORG_MAPPING[stepDef.assigneeRole];
+      if (!orgRoles || orgRoles.length === 0) continue;
+
+      // Find first matching org position with an assigned user
+      for (const orgRole of orgRoles) {
+        const pos = orgPositions.find((p) => p.role === orgRole && p.userId);
+        if (pos?.userId) {
+          assigneeMap.set(stepDef.order, pos.userId);
+          break;
+        }
+      }
+    }
+
+    return assigneeMap;
   }
 
   // ==========================================

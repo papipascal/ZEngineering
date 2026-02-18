@@ -16,6 +16,11 @@ import { IncomingEmailModule } from './modules/incoming-emails/incoming-email.mo
 import { SearchModule } from './modules/search/search.module.js';
 import { ContractItemsModule } from './modules/contract-items/contract-items.module.js';
 import { DataOriginModule } from './modules/data-origin/data-origin.module.js';
+import { OrganizationModule } from './modules/organization/organization.module.js';
+import { DashboardModule } from './modules/dashboard/dashboard.module.js';
+import { NotificationModule } from './modules/notifications/notification.module.js';
+import { AuditModule } from './modules/audit/audit.module.js';
+import { ExportModule } from './modules/export/export.module.js';
 import { AppController } from './app.controller.js';
 import { AppService } from './app.service.js';
 
@@ -38,6 +43,11 @@ import { AppService } from './app.service.js';
     SearchModule,
     ContractItemsModule,
     DataOriginModule,
+    OrganizationModule,
+    NotificationModule,
+    DashboardModule,
+    AuditModule,
+    ExportModule,
   ],
   controllers: [AppController],
   providers: [AppService],

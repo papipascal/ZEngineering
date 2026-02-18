@@ -1,5 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service.js';
+import { MailService } from '../mail/mail.service.js';
 import { IncomingEmailFilterDto } from './dto/incoming-email-filter.dto.js';
 import { UpdateIncomingEmailDto } from './dto/update-incoming-email.dto.js';
 import { CreateRoutingRuleDto, UpdateRoutingRuleDto } from './dto/create-routing-rule.dto.js';
@@ -7,7 +8,10 @@ import { Prisma } from '@prisma/client';
 
 @Injectable()
 export class IncomingEmailService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private mailService: MailService,
+  ) {}
 
   async findAll(filter: IncomingEmailFilterDto) {
     const where: Prisma.IncomingEmailWhereInput = {};
@@ -128,5 +132,48 @@ export class IncomingEmailService {
     const existing = await this.prisma.emailRoutingRule.findUnique({ where: { id } });
     if (!existing) throw new NotFoundException('Routing rule not found');
     return this.prisma.emailRoutingRule.delete({ where: { id } });
+  }
+
+  // ==========================================
+  // Reply to incoming email
+  // ==========================================
+
+  async replyToEmail(emailId: string, params: {
+    senderId: string;
+    body: string;
+  }) {
+    const email = await this.prisma.incomingEmail.findUnique({
+      where: { id: emailId },
+      include: { project: { select: { name: true, projectEmail: true } } },
+    });
+    if (!email) throw new NotFoundException('Incoming email not found');
+
+    const sender = await this.prisma.user.findUnique({
+      where: { id: params.senderId },
+      select: { name: true, email: true },
+    });
+    if (!sender) throw new NotFoundException('Sender user not found');
+
+    const fromAddress = email.project.projectEmail ?? sender.email;
+
+    await this.mailService.sendReply({
+      from: fromAddress,
+      to: email.fromAddress,
+      subject: `Re: ${email.subject}`,
+      senderName: sender.name,
+      projectName: email.project.name,
+      originalSubject: email.subject,
+      originalFrom: email.fromName ?? email.fromAddress,
+      originalDate: email.receivedAt,
+      body: params.body,
+    });
+
+    // Mark email as read after reply
+    await this.prisma.incomingEmail.update({
+      where: { id: emailId },
+      data: { status: 'READ' },
+    });
+
+    return { success: true, sentTo: email.fromAddress };
   }
 }

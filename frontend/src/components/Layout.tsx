@@ -1,8 +1,9 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import {
   AppBar, Toolbar, Typography, IconButton, Drawer, List, ListItemButton,
   ListItemIcon, ListItemText, Box, Avatar, Menu, MenuItem, Divider, Button, Chip,
+  Badge, Popover,
 } from '@mui/material';
 import {
   Menu as MenuIcon,
@@ -21,6 +22,9 @@ import {
   Gavel as ContractReqIcon,
   CompareArrows as ChangeLogIcon,
   VerifiedUser as AgoIcon,
+  AccountTree as OrgIcon,
+  History as AuditIcon,
+  Notifications as NotifIcon,
 } from '@mui/icons-material';
 import { useAuth } from '../auth/AuthContext';
 import { useProject, useIsProjectManager } from '../auth/ProjectContext';
@@ -42,7 +46,84 @@ const navItems = [
   { label: 'Inbox', path: '/incoming-emails', icon: <InboxIcon /> },
   { label: 'Documents', path: '/documents', icon: <DocumentIcon /> },
   { label: 'Vendors', path: '/vendors', icon: <VendorIcon /> },
+  { label: 'Organization', path: '/organization', icon: <OrgIcon /> },
+  { label: 'Audit Trail', path: '/audit', icon: <AuditIcon /> },
 ];
+
+interface Notification {
+  id: string;
+  type: string;
+  title: string;
+  message: string;
+  timestamp: string;
+}
+
+function NotificationBell() {
+  const { user } = useAuth();
+  const { project } = useProject();
+  const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+  const eventSourceRef = useRef<EventSource | null>(null);
+
+  useEffect(() => {
+    if (!user?.id) return;
+    const params = new URLSearchParams({ userId: user.id });
+    if (project?.id) params.append('projectIds', project.id);
+    const es = new EventSource(`/api/notifications/stream?${params}`);
+    eventSourceRef.current = es;
+    es.onmessage = (event) => {
+      try {
+        const data = JSON.parse(event.data);
+        const notif: Notification = {
+          id: event.lastEventId || Date.now().toString(),
+          type: data.type,
+          title: data.title || data.type,
+          message: data.message || JSON.stringify(data),
+          timestamp: new Date().toLocaleTimeString(),
+        };
+        setNotifications((prev) => [notif, ...prev].slice(0, 50));
+      } catch { /* ignore parse errors */ }
+    };
+    return () => { es.close(); };
+  }, [user?.id, project?.id]);
+
+  return (
+    <>
+      <IconButton color="inherit" onClick={(e) => setAnchorEl(e.currentTarget)} sx={{ mr: 1 }}>
+        <Badge badgeContent={notifications.length} color="error" max={99}>
+          <NotifIcon />
+        </Badge>
+      </IconButton>
+      <Popover
+        open={!!anchorEl}
+        anchorEl={anchorEl}
+        onClose={() => setAnchorEl(null)}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+        transformOrigin={{ vertical: 'top', horizontal: 'right' }}
+      >
+        <Box sx={{ width: 360, maxHeight: 400, overflow: 'auto', p: 2 }}>
+          <Typography variant="subtitle2" gutterBottom>Notifications</Typography>
+          {notifications.length === 0 ? (
+            <Typography variant="body2" color="text.secondary">No notifications yet</Typography>
+          ) : (
+            notifications.map((n) => (
+              <Box key={n.id} sx={{ mb: 1, p: 1, bgcolor: 'grey.50', borderRadius: 1 }}>
+                <Typography variant="caption" fontWeight="bold">{n.title}</Typography>
+                <Typography variant="body2" fontSize={12}>{n.message}</Typography>
+                <Typography variant="caption" color="text.secondary">{n.timestamp}</Typography>
+              </Box>
+            ))
+          )}
+          {notifications.length > 0 && (
+            <Button size="small" fullWidth onClick={() => { setNotifications([]); setAnchorEl(null); }}>
+              Clear all
+            </Button>
+          )}
+        </Box>
+      </Popover>
+    </>
+  );
+}
 
 export default function Layout() {
   const { user, logout } = useAuth();
@@ -89,6 +170,7 @@ export default function Layout() {
           <IconButton color="inherit" onClick={() => navigate('/search')} sx={{ mr: 1 }}>
             <SearchIcon />
           </IconButton>
+          <NotificationBell />
           <Box sx={{ flexGrow: 1 }} />
           <Typography variant="body2" sx={{ mr: 2 }}>
             {user?.name} ({user?.discipline ?? user?.role})

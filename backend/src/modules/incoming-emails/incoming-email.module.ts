@@ -4,9 +4,10 @@ import { IncomingEmailService } from './incoming-email.service.js';
 import { ImapPollingService } from './imap-polling.service.js';
 import { EmailRouterService } from './email-router.service.js';
 import { WorkflowModule } from '../workflows/workflow.module.js';
+import { MailModule } from '../mail/mail.module.js';
 
 @Module({
-  imports: [WorkflowModule],
+  imports: [WorkflowModule, MailModule],
   controllers: [IncomingEmailController],
   providers: [IncomingEmailService, ImapPollingService, EmailRouterService],
   exports: [IncomingEmailService],

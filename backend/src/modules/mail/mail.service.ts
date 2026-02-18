@@ -108,4 +108,37 @@ export class MailService {
     });
     this.logger.log(`Sent transmittal ${transmittalNumber} to ${to}`);
   }
+
+  async sendReply(params: {
+    from: string;
+    to: string;
+    subject: string;
+    senderName: string;
+    projectName: string;
+    originalSubject: string;
+    originalFrom: string;
+    originalDate: Date;
+    body: string;
+  }): Promise<void> {
+    const { from, to, subject, senderName, projectName, originalSubject, originalFrom, originalDate, body } = params;
+
+    await this.transporter.sendMail({
+      from,
+      to,
+      subject,
+      html: `
+        <div style="font-family:Arial,sans-serif;max-width:700px;margin:0 auto;">
+          <div style="padding:16px;">
+            <p>${body.replace(/\n/g, '<br>')}</p>
+            <p style="color:#888;margin-top:16px;">-- ${senderName}<br/>${projectName} | Zen-gineering</p>
+          </div>
+          <div style="border-top:1px solid #ccc;padding:16px;color:#666;font-size:13px;">
+            <p><strong>On ${originalDate.toISOString().split('T')[0]}, ${originalFrom} wrote:</strong></p>
+            <p style="font-style:italic;">Re: ${originalSubject}</p>
+          </div>
+        </div>
+      `,
+    });
+    this.logger.log(`Sent reply to ${to} re: ${originalSubject}`);
+  }
 }

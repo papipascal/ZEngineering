@@ -24,6 +24,8 @@ import SearchPage from './pages/SearchPage';
 import ContractRequirementsPage from './pages/ContractRequirementsPage';
 import ContractChangeLogPage from './pages/ContractChangeLogPage';
 import AgoReportPage from './pages/AgoReportPage';
+import OrganizationPage from './pages/OrganizationPage';
+import AuditPage from './pages/AuditPage';
 
 function App() {
   return (
@@ -65,6 +67,8 @@ function App() {
               <Route path="/contract-requirements" element={<ContractRequirementsPage />} />
               <Route path="/contract-change-log" element={<ContractChangeLogPage />} />
               <Route path="/ago-report" element={<AgoReportPage />} />
+              <Route path="/organization" element={<OrganizationPage />} />
+              <Route path="/audit" element={<AuditPage />} />
               <Route path="/project-setup" element={<ProjectSetupPage />} />
             </Route>
             <Route path="*" element={<Navigate to="/" replace />} />

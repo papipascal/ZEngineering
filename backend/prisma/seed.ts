@@ -95,64 +95,120 @@ async function main() {
   // Workflow Definitions
   // ==========================================
 
-  // Simple 2-step approval workflow (user request)
+  // Simple Approval: Execution → Lead Validation → Chef de Projet Approval
   const simpleApproval = await prisma.workflowDefinition.upsert({
     where: { name: 'Simple Approval' },
-    update: {},
-    create: {
-      name: 'Simple Approval',
+    update: {
       description:
-        'Simple 2-step workflow: Step 1 - responsible executes the task, Step 2 - project manager approves.',
+        'Circuit simple: execution, validation lead discipline, approbation chef de projet.',
       steps: [
         { name: 'Execution', order: 0, type: 'manual', assigneeRole: 'member' },
-        { name: 'Manager Approval', order: 1, type: 'manual', assigneeRole: 'manager' },
+        { name: 'Validation Lead Discipline', order: 1, type: 'manual', assigneeRole: 'lead' },
+        { name: 'Approbation Chef de Projet', order: 2, type: 'manual', assigneeRole: 'chef_de_projet' },
       ],
       transitions: [
         { from: 0, to: 1, condition: 'complete' },
+        { from: 1, to: 2, condition: 'approve' },
+      ],
+    },
+    create: {
+      name: 'Simple Approval',
+      description:
+        'Circuit simple: execution, validation lead discipline, approbation chef de projet.',
+      steps: [
+        { name: 'Execution', order: 0, type: 'manual', assigneeRole: 'member' },
+        { name: 'Validation Lead Discipline', order: 1, type: 'manual', assigneeRole: 'lead' },
+        { name: 'Approbation Chef de Projet', order: 2, type: 'manual', assigneeRole: 'chef_de_projet' },
+      ],
+      transitions: [
+        { from: 0, to: 1, condition: 'complete' },
+        { from: 1, to: 2, condition: 'approve' },
       ],
     },
   });
   console.log(`Created definition: ${simpleApproval.name}`);
 
-  // Document validation (existing)
+  // Document validation: Soumission → Lead Validation → Chef de Projet → Revue technique → Approbation finale
   const docValidation = await prisma.workflowDefinition.upsert({
     where: { name: 'Validation de document' },
-    update: {},
-    create: {
-      name: 'Validation de document',
+    update: {
       description:
-        'Processus standard de validation de document technique en 3 etapes: soumission, revue technique, approbation finale.',
+        'Validation de document technique: soumission, validation lead discipline, approbation chef de projet, revue technique, approbation finale.',
       steps: [
         { name: 'Soumission', order: 0, type: 'manual', assigneeRole: 'member' },
-        { name: 'Revue technique', order: 1, type: 'manual', assigneeRole: 'member' },
-        { name: 'Approbation finale', order: 2, type: 'manual', assigneeRole: 'manager' },
-      ],
-      transitions: [
-        { from: 0, to: 1, condition: 'approve' },
-        { from: 1, to: 2, condition: 'approve' },
-      ],
-    },
-  });
-  console.log(`Created definition: ${docValidation.name}`);
-
-  // Purchase approval (existing)
-  const purchaseApproval = await prisma.workflowDefinition.upsert({
-    where: { name: 'Approbation achat' },
-    update: {},
-    create: {
-      name: 'Approbation achat',
-      description:
-        "Circuit d'approbation des commandes: demande, verification budget, approbation manager, finalisation.",
-      steps: [
-        { name: 'Demande achat', order: 0, type: 'manual', assigneeRole: 'member' },
-        { name: 'Verification budget', order: 1, type: 'manual', assigneeRole: 'manager' },
-        { name: 'Approbation direction', order: 2, type: 'manual', assigneeRole: 'admin' },
-        { name: 'Finalisation commande', order: 3, type: 'manual', assigneeRole: 'member' },
+        { name: 'Validation Lead Discipline', order: 1, type: 'manual', assigneeRole: 'lead' },
+        { name: 'Approbation Chef de Projet', order: 2, type: 'manual', assigneeRole: 'chef_de_projet' },
+        { name: 'Revue technique', order: 3, type: 'manual', assigneeRole: 'member' },
+        { name: 'Approbation finale', order: 4, type: 'manual', assigneeRole: 'manager' },
       ],
       transitions: [
         { from: 0, to: 1, condition: 'approve' },
         { from: 1, to: 2, condition: 'approve' },
         { from: 2, to: 3, condition: 'approve' },
+        { from: 3, to: 4, condition: 'approve' },
+      ],
+    },
+    create: {
+      name: 'Validation de document',
+      description:
+        'Validation de document technique: soumission, validation lead discipline, approbation chef de projet, revue technique, approbation finale.',
+      steps: [
+        { name: 'Soumission', order: 0, type: 'manual', assigneeRole: 'member' },
+        { name: 'Validation Lead Discipline', order: 1, type: 'manual', assigneeRole: 'lead' },
+        { name: 'Approbation Chef de Projet', order: 2, type: 'manual', assigneeRole: 'chef_de_projet' },
+        { name: 'Revue technique', order: 3, type: 'manual', assigneeRole: 'member' },
+        { name: 'Approbation finale', order: 4, type: 'manual', assigneeRole: 'manager' },
+      ],
+      transitions: [
+        { from: 0, to: 1, condition: 'approve' },
+        { from: 1, to: 2, condition: 'approve' },
+        { from: 2, to: 3, condition: 'approve' },
+        { from: 3, to: 4, condition: 'approve' },
+      ],
+    },
+  });
+  console.log(`Created definition: ${docValidation.name}`);
+
+  // Purchase approval: Demande → Lead Validation → Chef de Projet → Budget → Direction → Finalisation
+  const purchaseApproval = await prisma.workflowDefinition.upsert({
+    where: { name: 'Approbation achat' },
+    update: {
+      description:
+        "Circuit d'approbation achat: demande, validation lead discipline, approbation chef de projet, verification budget, approbation direction, finalisation.",
+      steps: [
+        { name: 'Demande achat', order: 0, type: 'manual', assigneeRole: 'member' },
+        { name: 'Validation Lead Discipline', order: 1, type: 'manual', assigneeRole: 'lead' },
+        { name: 'Approbation Chef de Projet', order: 2, type: 'manual', assigneeRole: 'chef_de_projet' },
+        { name: 'Verification budget', order: 3, type: 'manual', assigneeRole: 'manager' },
+        { name: 'Approbation direction', order: 4, type: 'manual', assigneeRole: 'admin' },
+        { name: 'Finalisation commande', order: 5, type: 'manual', assigneeRole: 'member' },
+      ],
+      transitions: [
+        { from: 0, to: 1, condition: 'approve' },
+        { from: 1, to: 2, condition: 'approve' },
+        { from: 2, to: 3, condition: 'approve' },
+        { from: 3, to: 4, condition: 'approve' },
+        { from: 4, to: 5, condition: 'approve' },
+      ],
+    },
+    create: {
+      name: 'Approbation achat',
+      description:
+        "Circuit d'approbation achat: demande, validation lead discipline, approbation chef de projet, verification budget, approbation direction, finalisation.",
+      steps: [
+        { name: 'Demande achat', order: 0, type: 'manual', assigneeRole: 'member' },
+        { name: 'Validation Lead Discipline', order: 1, type: 'manual', assigneeRole: 'lead' },
+        { name: 'Approbation Chef de Projet', order: 2, type: 'manual', assigneeRole: 'chef_de_projet' },
+        { name: 'Verification budget', order: 3, type: 'manual', assigneeRole: 'manager' },
+        { name: 'Approbation direction', order: 4, type: 'manual', assigneeRole: 'admin' },
+        { name: 'Finalisation commande', order: 5, type: 'manual', assigneeRole: 'member' },
+      ],
+      transitions: [
+        { from: 0, to: 1, condition: 'approve' },
+        { from: 1, to: 2, condition: 'approve' },
+        { from: 2, to: 3, condition: 'approve' },
+        { from: 3, to: 4, condition: 'approve' },
+        { from: 4, to: 5, condition: 'approve' },
       ],
     },
   });
@@ -181,8 +237,14 @@ async function main() {
               startedAt: new Date(),
             },
             {
-              name: 'Manager Approval',
+              name: 'Validation Lead Discipline',
               order: 1,
+              status: 'pending',
+              assigneeId: admin.id, // Process lead
+            },
+            {
+              name: 'Approbation Chef de Projet',
+              order: 2,
               status: 'pending',
               assigneeId: manager.id,
             },
@@ -889,6 +951,163 @@ async function main() {
       },
     });
     console.log('Created sample transmittal');
+  }
+
+  // ==========================================
+  // Project Organization (org chart from General Organisation.xlsx)
+  // ==========================================
+
+  const orgRoles = [
+    { role: 'sponsor', label: 'Sponsor', parentRole: null, order: 0 },
+    { role: 'client', label: 'Client', parentRole: null, order: 1 },
+    { role: 'chef_de_projet', label: 'Chef de projet', parentRole: null, order: 2 },
+    { role: 'project_secretary', label: 'Project Secretariat', parentRole: 'chef_de_projet', order: 0 },
+    { role: 'doc_controller', label: 'Doc Controleur', parentRole: 'chef_de_projet', order: 1 },
+    { role: 'cost_controller', label: 'Cost Controller', parentRole: 'chef_de_projet', order: 2 },
+    { role: 'quality_manager', label: 'Quality Manager', parentRole: 'chef_de_projet', order: 3 },
+    { role: 'contract_manager', label: 'Contract Manager', parentRole: 'chef_de_projet', order: 4 },
+    { role: 'engineering_manager', label: 'Engineering Manager', parentRole: 'chef_de_projet', order: 5 },
+    { role: 'process_lead', label: 'Process Lead', parentRole: 'engineering_manager', order: 0 },
+    { role: 'layout_lead', label: 'Layout Lead', parentRole: 'engineering_manager', order: 1 },
+    { role: 'civil_lead', label: 'Civil Lead', parentRole: 'engineering_manager', order: 2 },
+    { role: 'piping_lead', label: 'Piping Lead', parentRole: 'engineering_manager', order: 3 },
+    { role: 'vessels_lead', label: 'Vessels Lead', parentRole: 'engineering_manager', order: 4 },
+    { role: 'machine_lead', label: 'Machine Lead', parentRole: 'engineering_manager', order: 5 },
+    { role: 'electrical_lead', label: 'Electrical Lead', parentRole: 'engineering_manager', order: 6 },
+    { role: 'instrument_lead', label: 'Instrument Lead', parentRole: 'engineering_manager', order: 7 },
+    { role: 'subcontracted_studies', label: 'Subcontracted Studies', parentRole: 'engineering_manager', order: 8 },
+    { role: 'procurement_manager', label: 'Procurement', parentRole: 'chef_de_projet', order: 6 },
+    { role: 'buyer', label: 'Buyer', parentRole: 'procurement_manager', order: 0 },
+    { role: 'inspector', label: 'Inspector', parentRole: 'procurement_manager', order: 1 },
+    { role: 'expeditor', label: 'Expeditor', parentRole: 'procurement_manager', order: 2 },
+    { role: 'construction_manager', label: 'Construction', parentRole: 'chef_de_projet', order: 7 },
+    { role: 'safety', label: 'Safety', parentRole: 'construction_manager', order: 0 },
+    { role: 'quality_construction', label: 'Quality', parentRole: 'construction_manager', order: 1 },
+    { role: 'subcontractor_lead', label: 'Sub Contractor Lead', parentRole: 'construction_manager', order: 2 },
+    { role: 'progress_piping', label: 'Progress Piping', parentRole: 'construction_manager', order: 3 },
+    { role: 'progress_installation', label: 'Progress Installation', parentRole: 'construction_manager', order: 4 },
+    { role: 'progress_civil', label: 'Progress Civil', parentRole: 'construction_manager', order: 5 },
+    { role: 'precom_comm', label: 'Precom Comm', parentRole: 'construction_manager', order: 6 },
+    { role: 'contract_lead', label: 'Contract Lead', parentRole: 'construction_manager', order: 7 },
+  ];
+
+  // Assign sample users to key org roles
+  for (const r of orgRoles) {
+    let userId: string | null = null;
+    if (r.role === 'chef_de_projet') userId = manager.id;
+    if (r.role === 'process_lead') userId = admin.id;
+    if (r.role === 'doc_controller') userId = reviewer.id;
+
+    await prisma.projectOrganization.upsert({
+      where: { projectId_role: { projectId: project.id, role: r.role } },
+      update: {},
+      create: {
+        projectId: project.id,
+        role: r.role,
+        label: r.label,
+        parentRole: r.parentRole,
+        userId,
+        order: r.order,
+      },
+    });
+  }
+  console.log(`Created ${orgRoles.length} organization positions for project`);
+
+  // ==========================================
+  // Project Tree Template (from General Organisation.xlsx - Arborescence)
+  // ==========================================
+
+  const existingTemplates = await prisma.projectTreeTemplate.count();
+  if (existingTemplates === 0) {
+    type TreeItem = { name: string; level: number; order: number; children?: TreeItem[] };
+
+    const treeData: TreeItem[] = [
+      {
+        name: 'Cahier des charges', level: 1, order: 0, children: [
+          { name: 'Specifications techniques', level: 2, order: 0 },
+          { name: 'Liste de documents a produire', level: 2, order: 1 },
+          { name: "Documents d'avant projet", level: 2, order: 2 },
+        ],
+      },
+      {
+        name: 'Gestion de projet', level: 1, order: 1, children: [
+          { name: 'Project secretariat', level: 2, order: 0, children: [
+            { name: 'Liste des communications', level: 3, order: 0 },
+          ] },
+          { name: 'Cost control', level: 2, order: 1 },
+          { name: 'Doc control', level: 2, order: 2, children: [
+            { name: 'Liste des plans et documents', level: 3, order: 0 },
+            { name: 'Liste des transmittals', level: 3, order: 1 },
+          ] },
+          { name: 'Planning', level: 2, order: 3 },
+          { name: 'Qualite Securite', level: 2, order: 4 },
+          { name: 'Specification de projet', level: 2, order: 5 },
+          { name: 'Organigramme de projet', level: 2, order: 6 },
+        ],
+      },
+      {
+        name: 'Engineering', level: 1, order: 2, children: [
+          { name: 'Liste de plans', level: 2, order: 0 },
+          { name: 'Process', level: 2, order: 1 },
+          { name: 'Layout', level: 2, order: 2 },
+          { name: 'Piping', level: 2, order: 3 },
+          { name: 'Civil', level: 2, order: 4 },
+          { name: 'Equipements', level: 2, order: 5 },
+          { name: 'Electricite', level: 2, order: 6 },
+          { name: 'Instrumentation', level: 2, order: 7 },
+          { name: 'Systeme', level: 2, order: 8 },
+          { name: "Contrats d'etude et de sous traitances", level: 2, order: 9 },
+        ],
+      },
+      {
+        name: 'Procurement', level: 1, order: 3, children: [
+          { name: 'Contrat clauses de commandes', level: 2, order: 0 },
+          { name: 'Vendor list', level: 2, order: 1 },
+          { name: "Appels d'offres", level: 2, order: 2 },
+          { name: 'Commandes', level: 2, order: 3 },
+        ],
+      },
+      {
+        name: 'Construction', level: 1, order: 4, children: [
+          { name: 'Site preparation', level: 2, order: 0 },
+          { name: "Appels d'offres", level: 2, order: 1 },
+          { name: 'Commande site', level: 2, order: 2 },
+        ],
+      },
+      {
+        name: 'Precom Com', level: 1, order: 5, children: [
+          { name: 'Procedure', level: 2, order: 0 },
+          { name: 'Reception', level: 2, order: 1 },
+        ],
+      },
+      { name: 'Start-up', level: 1, order: 6 },
+      {
+        name: 'Documents generaux', level: 1, order: 7, children: [
+          { name: 'Liste des bases de donnees', level: 2, order: 0 },
+          { name: 'Liste des workflows', level: 2, order: 1 },
+          { name: 'Methodes et procedure', level: 2, order: 2 },
+        ],
+      },
+    ];
+
+    async function createTreeTemplates(items: TreeItem[], parentId: string | null) {
+      for (const item of items) {
+        const node = await prisma.projectTreeTemplate.create({
+          data: {
+            name: item.name,
+            parentId,
+            level: item.level,
+            order: item.order,
+          },
+        });
+        if (item.children) {
+          await createTreeTemplates(item.children, node.id);
+        }
+      }
+    }
+
+    await createTreeTemplates(treeData, null);
+    console.log('Created project tree template');
   }
 
   console.log('\nSeed completed successfully!');

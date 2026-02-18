@@ -44,6 +44,7 @@ model User {
   dataOriginValidations DataOrigin[] @relation("DataOriginValidator")
   emailAssignments  IncomingEmail[]  @relation("EmailAssignee")
   emailRouteTargets EmailRoutingRule[] @relation("EmailRouteTargetUser")
+  orgPositions      ProjectOrganization[]
 }
 
 model Project {
@@ -71,6 +72,8 @@ model Project {
   searchQueries   SearchQuery[]
   contractItems      ContractItem[]
   emailRoutingRules  EmailRoutingRule[]
+  organization       ProjectOrganization[]
+  projectTree        ProjectTree[]
 }
 
 model ProjectMember {
@@ -665,4 +668,79 @@ model EmailRoutingRule {
 
   project    Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
   targetUser User?   @relation("EmailRouteTargetUser", fields: [targetUserId], references: [id], onDelete: SetNull)
+}
+
+// ==========================================
+// Project Organization (org chart per project)
+// ==========================================
+
+model ProjectOrganization {
+  id         String   @id @default(uuid())
+  projectId  String
+  role       String   // e.g. "chef_de_projet", "process_lead"
+  label      String   // e.g. "Chef de projet", "Process Lead"
+  parentRole String?  // hierarchy: "process_lead" -> parent "engineering_manager"
+  userId     String?  // assigned user (optional)
+  order      Int      @default(0)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  user    User?   @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@unique([projectId, role])
+}
+
+// ==========================================
+// Project Tree Template (default project structure)
+// ==========================================
+
+model ProjectTreeTemplate {
+  id       String  @id @default(uuid())
+  name     String
+  parentId String?
+  level    Int     // 0=root, 1=phase, 2=discipline, 3=sub-item
+  order    Int     @default(0)
+
+  parent   ProjectTreeTemplate?  @relation("TreeChildren", fields: [parentId], references: [id])
+  children ProjectTreeTemplate[] @relation("TreeChildren")
+}
+
+// ==========================================
+// Project Tree (per-project adjustable copy)
+// ==========================================
+
+model ProjectTree {
+  id        String   @id @default(uuid())
+  projectId String
+  name      String
+  parentId  String?
+  level     Int
+  order     Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  project  Project      @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  parent   ProjectTree? @relation("ProjTreeChildren", fields: [parentId], references: [id])
+  children ProjectTree[] @relation("ProjTreeChildren")
+}
+
+// ==========================================
+// Audit Trail
+// ==========================================
+
+model AuditLog {
+  id         String   @id @default(uuid())
+  projectId  String?
+  userId     String?
+  action     String   // create, update, delete, approve, reject, complete, send, upload
+  entity     String   // equipment, workflow, document, transmittal, email, changeRequest, etc.
+  entityId   String?
+  summary    String   // human-readable description
+  changes    Json?    // { field: { old, new } } for updates
+  createdAt  DateTime @default(now())
+
+  @@index([projectId, createdAt])
+  @@index([entity, entityId])
+  @@index([userId, createdAt])
 }
