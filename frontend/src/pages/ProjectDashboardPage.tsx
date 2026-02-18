@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Typography, Grid, Card, CardContent, CardActionArea, Box, CircularProgress,
-  Chip, Stack, Avatar, Divider, TextField, Button, Alert,
+  Chip, Stack, Avatar, Divider, Button,
 } from '@mui/material';
 import {
   Build as EquipmentIcon,
@@ -10,20 +10,20 @@ import {
   Assignment as TaskIcon,
   SwapHoriz as ChangeIcon,
   ListAlt as RegisterIcon,
-  Email as EmailIcon,
+  Settings as SettingsIcon,
 } from '@mui/icons-material';
 import { useAuth } from '../auth/AuthContext';
-import { useProject } from '../auth/ProjectContext';
+import { useProject, useIsProjectManager } from '../auth/ProjectContext';
 import { projectApi, ProjectDetail } from '../api/projects';
 import { equipmentApi } from '../api/equipment';
 import { discussionApi, Discussion } from '../api/discussions';
 import { workflowApi, WorkflowStep } from '../api/workflows';
 import { changeRequestApi } from '../api/change-requests';
-import { incomingEmailApi } from '../api/incoming-emails';
 
 export default function ProjectDashboardPage() {
   const { user } = useAuth();
   const { project: selectedProject } = useProject();
+  const isManager = useIsProjectManager();
   const navigate = useNavigate();
   const [projectDetail, setProjectDetail] = useState<ProjectDetail | null>(null);
   const [equipmentCount, setEquipmentCount] = useState(0);
@@ -31,38 +31,17 @@ export default function ProjectDashboardPage() {
   const [tasks, setTasks] = useState<WorkflowStep[]>([]);
   const [pendingChanges, setPendingChanges] = useState(0);
   const [loading, setLoading] = useState(true);
-  const [emailField, setEmailField] = useState('');
-  const [emailSaving, setEmailSaving] = useState(false);
-  const [emailSaved, setEmailSaved] = useState(false);
-  const [imapStatus, setImapStatus] = useState<{ configured: boolean; host?: string } | null>(null);
 
   useEffect(() => {
     if (!selectedProject) { navigate('/select-project'); return; }
     Promise.all([
-      projectApi.getById(selectedProject.id).then((r) => {
-        setProjectDetail(r.data);
-        setEmailField(r.data.projectEmail || '');
-      }),
+      projectApi.getById(selectedProject.id).then((r) => setProjectDetail(r.data)),
       equipmentApi.list({ projectId: selectedProject.id }).then((r) => setEquipmentCount(r.data.length)),
       discussionApi.list({ projectId: selectedProject.id }).then((r) => setDiscussions(r.data)),
       workflowApi.getActiveTasks().then((r) => setTasks(r.data)),
       changeRequestApi.list({ status: 'PENDING' }).then((r) => setPendingChanges(r.data.length)),
-      incomingEmailApi.getStatus().then((r) => setImapStatus(r.data)).catch(() => {}),
     ]).finally(() => setLoading(false));
   }, [selectedProject, navigate]);
-
-  const handleSaveEmail = async () => {
-    if (!selectedProject) return;
-    setEmailSaving(true);
-    setEmailSaved(false);
-    try {
-      await projectApi.update(selectedProject.id, { projectEmail: emailField || null } as any);
-      setEmailSaved(true);
-      setTimeout(() => setEmailSaved(false), 3000);
-    } finally {
-      setEmailSaving(false);
-    }
-  };
 
   if (loading) return <Box textAlign="center" mt={4}><CircularProgress /></Box>;
   if (!projectDetail) return null;
@@ -75,6 +54,19 @@ export default function ProjectDashboardPage() {
       <Stack direction="row" alignItems="center" spacing={2} mb={1}>
         <Typography variant="h4">{projectDetail.name}</Typography>
         <Chip label={projectDetail.status} color={projectDetail.status === 'active' ? 'success' : 'default'} />
+        {projectDetail.myRole && (
+          <Chip label={`My role: ${projectDetail.myRole}`} size="small" color="primary" variant="outlined" />
+        )}
+        {isManager && (
+          <Button
+            variant="outlined"
+            size="small"
+            startIcon={<SettingsIcon />}
+            onClick={() => navigate('/project-setup')}
+          >
+            Project Setup
+          </Button>
+        )}
       </Stack>
       {projectDetail.description && (
         <Typography variant="body1" color="text.secondary" mb={1}>{projectDetail.description}</Typography>
@@ -85,48 +77,6 @@ export default function ProjectDashboardPage() {
           {projectDetail.clientContact && ` — ${projectDetail.clientContact}`}
         </Typography>
       )}
-
-      {/* Email Settings */}
-      <Card sx={{ mb: 3 }}>
-        <CardContent>
-          <Stack direction="row" alignItems="center" spacing={1} mb={2}>
-            <EmailIcon color="primary" />
-            <Typography variant="h6">Email Settings</Typography>
-          </Stack>
-          <Stack direction="row" alignItems="center" spacing={2} flexWrap="wrap">
-            <TextField
-              size="small"
-              label="Project Email Address"
-              value={emailField}
-              onChange={(e) => { setEmailField(e.target.value); setEmailSaved(false); }}
-              placeholder="e.g. project-ua@company.com"
-              sx={{ minWidth: 300 }}
-            />
-            <Button
-              variant="contained"
-              size="small"
-              onClick={handleSaveEmail}
-              disabled={emailSaving || emailField === (projectDetail?.projectEmail || '')}
-            >
-              {emailSaving ? 'Saving...' : 'Save'}
-            </Button>
-            {emailSaved && <Alert severity="success" sx={{ py: 0 }}>Saved</Alert>}
-            <Box sx={{ ml: 'auto' }}>
-              <Chip
-                label={imapStatus?.configured ? `IMAP: ${imapStatus.host}` : 'IMAP: Not configured'}
-                size="small"
-                color={imapStatus?.configured ? 'success' : 'default'}
-                variant="outlined"
-              />
-            </Box>
-          </Stack>
-          {!imapStatus?.configured && (
-            <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: 'block' }}>
-              Set IMAP_HOST, IMAP_PORT, IMAP_USER, IMAP_PASSWORD environment variables on the backend to enable inbox polling.
-            </Typography>
-          )}
-        </CardContent>
-      </Card>
 
       {/* Stats cards */}
       <Grid container spacing={3} mb={4}>
@@ -176,7 +126,7 @@ export default function ProjectDashboardPage() {
           </Card>
         </Grid>
 
-        {/* Partners */}
+        {/* Partners & Vendors */}
         <Grid size={{ xs: 12, md: 6 }}>
           <Card>
             <CardContent>

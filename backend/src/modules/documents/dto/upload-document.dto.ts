@@ -1,6 +1,6 @@
 import { IsString, IsOptional, IsUUID, IsEnum } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
-import { DocumentCategory } from '@prisma/client';
+import { DocumentCategory, DocumentFolder } from '@prisma/client';
 
 export class UploadDocumentDto {
   @ApiProperty({ description: 'Project ID' })
@@ -11,6 +11,11 @@ export class UploadDocumentDto {
   @IsOptional()
   @IsEnum(DocumentCategory)
   category?: DocumentCategory;
+
+  @ApiProperty({ enum: DocumentFolder, required: false, default: 'OTHER' })
+  @IsOptional()
+  @IsEnum(DocumentFolder)
+  folder?: DocumentFolder;
 
   @ApiProperty({ required: false, example: 'Pump 125-PR-601 datasheet from vendor MOUVEX' })
   @IsOptional()

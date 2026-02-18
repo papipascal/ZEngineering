@@ -16,19 +16,28 @@ import {
   ListAlt as RegisterIcon,
   Send as SendIcon,
   Inbox as InboxIcon,
+  Settings as SettingsIcon,
+  Search as SearchIcon,
+  Gavel as ContractReqIcon,
+  CompareArrows as ChangeLogIcon,
+  VerifiedUser as AgoIcon,
 } from '@mui/icons-material';
 import { useAuth } from '../auth/AuthContext';
-import { useProject } from '../auth/ProjectContext';
+import { useProject, useIsProjectManager } from '../auth/ProjectContext';
 
 const DRAWER_WIDTH = 240;
 
 const navItems = [
+  { label: 'Search', path: '/search', icon: <SearchIcon /> },
   { label: 'Dashboard', path: '/', icon: <DashboardIcon /> },
   { label: 'Equipment', path: '/equipment', icon: <EquipmentIcon /> },
   { label: 'Discussions', path: '/discussions', icon: <DiscussionIcon /> },
   { label: 'My Tasks', path: '/tasks', icon: <TaskIcon /> },
   { label: 'Change Requests', path: '/change-requests', icon: <ChangeIcon /> },
   { label: 'Doc Register', path: '/document-register', icon: <RegisterIcon /> },
+  { label: 'Contract Req.', path: '/contract-requirements', icon: <ContractReqIcon /> },
+  { label: 'Change Log', path: '/contract-change-log', icon: <ChangeLogIcon /> },
+  { label: 'AGO Report', path: '/ago-report', icon: <AgoIcon /> },
   { label: 'Transmittals', path: '/transmittals', icon: <SendIcon /> },
   { label: 'Inbox', path: '/incoming-emails', icon: <InboxIcon /> },
   { label: 'Documents', path: '/documents', icon: <DocumentIcon /> },
@@ -38,6 +47,7 @@ const navItems = [
 export default function Layout() {
   const { user, logout } = useAuth();
   const { project, clearProject } = useProject();
+  const isManager = useIsProjectManager();
   const navigate = useNavigate();
   const location = useLocation();
   const [drawerOpen, setDrawerOpen] = useState(false);
@@ -76,6 +86,9 @@ export default function Layout() {
               </Button>
             </>
           )}
+          <IconButton color="inherit" onClick={() => navigate('/search')} sx={{ mr: 1 }}>
+            <SearchIcon />
+          </IconButton>
           <Box sx={{ flexGrow: 1 }} />
           <Typography variant="body2" sx={{ mr: 2 }}>
             {user?.name} ({user?.discipline ?? user?.role})
@@ -118,6 +131,18 @@ export default function Layout() {
               <ListItemText primary={item.label} />
             </ListItemButton>
           ))}
+          {isManager && (
+            <>
+              <Divider sx={{ my: 1 }} />
+              <ListItemButton
+                selected={location.pathname === '/project-setup'}
+                onClick={() => navigate('/project-setup')}
+              >
+                <ListItemIcon><SettingsIcon /></ListItemIcon>
+                <ListItemText primary="Project Setup" />
+              </ListItemButton>
+            </>
+          )}
         </List>
       </Drawer>
 

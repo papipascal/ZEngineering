@@ -56,6 +56,13 @@ export class AuthService {
     return user;
   }
 
+  async listUsers() {
+    return this.prisma.user.findMany({
+      select: { id: true, email: true, name: true, role: true, discipline: true },
+      orderBy: { name: 'asc' },
+    });
+  }
+
   private buildTokenResponse(user: { id: string; email: string; role: string; name: string; discipline: string | null }) {
     const payload = { sub: user.id, email: user.email, role: user.role };
     return {

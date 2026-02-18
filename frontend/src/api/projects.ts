@@ -8,6 +8,7 @@ export interface Project {
   clientName: string | null;
   clientContact: string | null;
   projectEmail?: string | null;
+  myRole?: string;
   createdAt: string;
   updatedAt: string;
   _count?: {
@@ -40,6 +41,7 @@ export interface ProjectVendorEntry {
 }
 
 export interface ProjectDetail extends Project {
+  myRole?: string;
   members: ProjectMember[];
   partners: ProjectPartner[];
   projectVendors: ProjectVendorEntry[];

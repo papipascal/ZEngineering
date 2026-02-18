@@ -1,6 +1,7 @@
 import { Injectable, Logger, OnModuleInit, OnModuleDestroy } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service.js';
 import { StorageService } from '../storage/storage.service.js';
+import { EmailRouterService } from './email-router.service.js';
 import { ImapFlow } from 'imapflow';
 import { v4 as uuid } from 'uuid';
 
@@ -13,6 +14,7 @@ export class ImapPollingService implements OnModuleInit, OnModuleDestroy {
   constructor(
     private prisma: PrismaService,
     private storageService: StorageService,
+    private emailRouter: EmailRouterService,
   ) {}
 
   onModuleInit() {
@@ -146,8 +148,14 @@ export class ImapPollingService implements OnModuleInit, OnModuleDestroy {
       }
     }
 
+    // Auto-detect if sender is external (not a registered user)
+    const knownUser = await this.prisma.user.findFirst({
+      where: { email: { equals: fromAddress, mode: 'insensitive' } },
+    });
+    const isExternal = !knownUser;
+
     // Create IncomingEmail + Document records in a transaction
-    await this.prisma.$transaction(async (tx) => {
+    const createdEmail = await this.prisma.$transaction(async (tx) => {
       const incomingEmail = await tx.incomingEmail.create({
         data: {
           projectId: project.id,
@@ -158,6 +166,7 @@ export class ImapPollingService implements OnModuleInit, OnModuleDestroy {
           subject,
           bodyText,
           receivedAt,
+          isExternal,
         },
       });
 
@@ -166,6 +175,7 @@ export class ImapPollingService implements OnModuleInit, OnModuleDestroy {
           data: {
             ...att,
             category: 'OTHER',
+            folder: 'EMAILS',
             projectId: project.id,
             uploadedById: (await tx.projectMember.findFirst({
               where: { projectId: project.id, role: 'owner' },
@@ -175,7 +185,16 @@ export class ImapPollingService implements OnModuleInit, OnModuleDestroy {
           },
         });
       }
+
+      return incomingEmail;
     });
+
+    // Route the email to the appropriate person/workflow
+    try {
+      await this.emailRouter.routeEmail(createdEmail.id, project.id);
+    } catch (err) {
+      this.logger.error(`Email routing failed for "${subject}"`, err instanceof Error ? err.message : err);
+    }
 
     // Mark as seen in IMAP
     await client.messageFlagsAdd(String(msg.seq), ['\\Seen']);

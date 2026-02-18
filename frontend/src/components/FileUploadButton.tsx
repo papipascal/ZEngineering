@@ -11,13 +11,14 @@ interface Props {
   commentId?: string;
   registerEntryId?: string;
   category?: string;
+  folder?: string;
   onUploaded: (doc: Document) => void;
   label?: string;
   size?: 'small' | 'medium' | 'large';
 }
 
 export default function FileUploadButton({
-  projectId, equipmentId, vendorId, discussionId, commentId, registerEntryId, category,
+  projectId, equipmentId, vendorId, discussionId, commentId, registerEntryId, category, folder,
   onUploaded, label = 'Upload file', size = 'small',
 }: Props) {
   const inputRef = useRef<HTMLInputElement>(null);
@@ -29,7 +30,7 @@ export default function FileUploadButton({
     setUploading(true);
     try {
       const res = await documentApi.upload(file, {
-        projectId, equipmentId, vendorId, discussionId, commentId, registerEntryId, category,
+        projectId, equipmentId, vendorId, discussionId, commentId, registerEntryId, category, folder,
       });
       onUploaded(res.data);
     } catch (err) {

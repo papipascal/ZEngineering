@@ -10,16 +10,22 @@ import { AssignVendorDto } from './dto/assign-vendor.dto.js';
 export class ProjectService {
   constructor(private readonly prisma: PrismaService) {}
 
-  async findAll() {
-    return this.prisma.project.findMany({
+  async findAll(userId: string) {
+    const projects = await this.prisma.project.findMany({
+      where: { members: { some: { userId } } },
       orderBy: { name: 'asc' },
       include: {
+        members: { where: { userId }, select: { role: true } },
         _count: { select: { members: true, equipment: true, discussions: true, documents: true } },
       },
     });
+    return projects.map(({ members, ...project }) => ({
+      ...project,
+      myRole: members[0]?.role ?? 'member',
+    }));
   }
 
-  async findOne(id: string) {
+  async findOne(id: string, userId?: string) {
     const project = await this.prisma.project.findUnique({
       where: { id },
       include: {
@@ -42,7 +48,12 @@ export class ProjectService {
       },
     });
     if (!project) throw new NotFoundException(`Project ${id} not found`);
-    return project;
+
+    const myRole = userId
+      ? project.members.find((m) => m.userId === userId)?.role ?? 'member'
+      : undefined;
+
+    return { ...project, myRole };
   }
 
   async create(dto: CreateProjectDto, ownerId: string) {

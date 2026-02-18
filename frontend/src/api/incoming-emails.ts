@@ -12,6 +12,10 @@ export interface IncomingEmail {
   bodyHtml?: string | null;
   receivedAt: string;
   status: string;
+  purpose?: string | null;
+  documentIntent?: string | null;
+  isExternal?: boolean;
+  notes?: string | null;
   createdAt: string;
   project?: { id: string; name: string } | null;
   attachments?: Array<{
@@ -26,11 +30,14 @@ export interface IncomingEmail {
 }
 
 export const incomingEmailApi = {
-  list: (params?: { projectId?: string; status?: string; search?: string }) =>
+  list: (params?: { projectId?: string; status?: string; purpose?: string; isExternal?: string; search?: string }) =>
     client.get<IncomingEmail[]>('/api/incoming-emails', { params }),
 
   getById: (id: string) =>
     client.get<IncomingEmail>(`/api/incoming-emails/${id}`),
+
+  update: (id: string, data: { status?: string; purpose?: string; documentIntent?: string; notes?: string }) =>
+    client.patch<IncomingEmail>(`/api/incoming-emails/${id}`, data),
 
   updateStatus: (id: string, status: 'READ' | 'ARCHIVED') =>
     client.patch<IncomingEmail>(`/api/incoming-emails/${id}`, { status }),

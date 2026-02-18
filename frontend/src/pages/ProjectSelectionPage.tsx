@@ -24,7 +24,7 @@ export default function ProjectSelectionPage() {
   }, []);
 
   const handleSelect = (p: Project) => {
-    selectProject({ id: p.id, name: p.name, status: p.status });
+    selectProject({ id: p.id, name: p.name, status: p.status, myRole: p.myRole });
     navigate('/');
   };
 
@@ -80,6 +80,7 @@ export default function ProjectSelectionPage() {
                       )}
                       <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
                         <Chip label={p.status} size="small" color={p.status === 'active' ? 'success' : 'default'} />
+                        {p.myRole && <Chip label={p.myRole} size="small" color="primary" variant="outlined" />}
                         {p._count && (
                           <>
                             <Chip label={`${p._count.equipment} equip.`} size="small" variant="outlined" />

@@ -38,7 +38,12 @@ model User {
   documents      Document[]
   ownedDocumentEntries  DocumentRegisterEntry[] @relation("DocumentOwner")
   issuedDocumentEntries DocumentRegisterEntry[] @relation("DocumentIssuer")
-  transmittals   Transmittal[]
+  transmittals      Transmittal[]
+  searchQueries     SearchQuery[]
+  contractItems     ContractItem[]  @relation("ContractItemAssignee")
+  dataOriginValidations DataOrigin[] @relation("DataOriginValidator")
+  emailAssignments  IncomingEmail[]  @relation("EmailAssignee")
+  emailRouteTargets EmailRoutingRule[] @relation("EmailRouteTargetUser")
 }
 
 model Project {
@@ -63,6 +68,9 @@ model Project {
   documentEntries DocumentRegisterEntry[]
   transmittals    Transmittal[]
   incomingEmails  IncomingEmail[]
+  searchQueries   SearchQuery[]
+  contractItems      ContractItem[]
+  emailRoutingRules  EmailRoutingRule[]
 }
 
 model ProjectMember {
@@ -107,6 +115,7 @@ model WorkflowInstance {
   project       Project?            @relation(fields: [projectId], references: [id])
   steps         WorkflowStep[]
   changeRequest ChangeRequest?
+  incomingEmail IncomingEmail?
 }
 
 model WorkflowStep {
@@ -160,6 +169,7 @@ model Equipment {
   discussions    Discussion[]
   changeRequests ChangeRequest[]
   documents      Document[]
+  dataOrigins    DataOrigin[]
 }
 
 // ==========================================
@@ -195,9 +205,10 @@ model ChangeRequest {
 // ==========================================
 
 model Vendor {
-  id      String  @id @default(uuid())
-  name    String  @unique
-  country String?
+  id           String  @id @default(uuid())
+  name         String  @unique
+  country      String?
+  contactEmail String?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -269,6 +280,14 @@ enum DocumentCategory {
   OTHER
 }
 
+enum DocumentFolder {
+  CONTRACT
+  CLIENT_SPECS
+  ENGINEERING
+  EMAILS
+  OTHER
+}
+
 model Document {
   id          String           @id @default(uuid())
   fileName    String
@@ -276,6 +295,7 @@ model Document {
   mimeType    String
   s3Key       String           @unique
   category    DocumentCategory @default(OTHER)
+  folder      DocumentFolder   @default(OTHER)
   description String?
 
   uploadedById String
@@ -299,6 +319,8 @@ model Document {
   incomingEmail   IncomingEmail? @relation(fields: [incomingEmailId], references: [id], onDelete: SetNull)
 
   transmittalItems TransmittalItem[]
+  contractItems    ContractItem[]
+  dataOrigins      DataOrigin[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -368,6 +390,7 @@ model DocumentRegisterEntry {
   issuer    User?      @relation("DocumentIssuer", fields: [issuerId], references: [id])
   revisions Document[]
   transmittalItems TransmittalItem[]
+  dataOrigins      DataOrigin[]
 
   @@unique([projectId, documentNumber])
 }
@@ -394,6 +417,20 @@ enum IncomingEmailStatus {
   UNREAD
   READ
   ARCHIVED
+}
+
+enum EmailPurpose {
+  INFORMATION
+  QUERY
+  DOCUMENT_SUBMISSION
+  COMMENT_REQUEST
+  OTHER
+}
+
+enum EmailDocumentIntent {
+  FOR_INFORMATION
+  AS_INPUT
+  FOR_COMMENTS
 }
 
 model Transmittal {
@@ -436,19 +473,196 @@ model TransmittalItem {
 }
 
 model IncomingEmail {
-  id          String             @id @default(uuid())
-  projectId   String
-  messageId   String             @unique // IMAP Message-ID for dedup
-  fromAddress String
-  fromName    String?
-  toAddress   String
-  subject     String
-  bodyText    String?
-  bodyHtml    String?
-  receivedAt  DateTime
-  status      IncomingEmailStatus @default(UNREAD)
-  createdAt   DateTime           @default(now())
+  id              String              @id @default(uuid())
+  projectId       String
+  messageId       String              @unique // IMAP Message-ID for dedup
+  fromAddress     String
+  fromName        String?
+  toAddress       String
+  subject         String
+  bodyText        String?
+  bodyHtml        String?
+  receivedAt      DateTime
+  status          IncomingEmailStatus @default(UNREAD)
+  purpose         EmailPurpose?
+  documentIntent  EmailDocumentIntent?
+  isExternal      Boolean             @default(false)
+  notes           String?
+  assignedToId    String?
+  routedVia       String?             // "rule:<name>" or "auto:partner" or "auto:vendor" or "auto:discipline"
+  workflowInstanceId String?          @unique
+  createdAt       DateTime            @default(now())
 
-  project     Project    @relation(fields: [projectId], references: [id], onDelete: Cascade)
-  attachments Document[]
+  project          Project            @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  attachments      Document[]
+  assignedTo       User?              @relation("EmailAssignee", fields: [assignedToId], references: [id], onDelete: SetNull)
+  workflowInstance WorkflowInstance?  @relation(fields: [workflowInstanceId], references: [id], onDelete: SetNull)
+}
+
+// ==========================================
+// Search Queries (log + saved bookmarks)
+// ==========================================
+
+model SearchQuery {
+  id        String   @id @default(uuid())
+  projectId String
+  userId    String
+  name      String?  // null = log entry, non-null = saved bookmark
+  query     String   // The text query
+  filters   Json?    // Stored filter state
+  pinned    Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+// ==========================================
+// Contract Management
+// ==========================================
+
+enum ContractItemType {
+  REQUIREMENT // Contract reading / requirements register (project start)
+  CHANGE      // Contract change log (project execution)
+}
+
+enum ContractItemStatus {
+  OPEN
+  IN_PROGRESS
+  CLOSED
+  COMPLIANT
+  NON_COMPLIANT
+  WAIVED
+  PENDING_APPROVAL
+  APPROVED
+  REJECTED
+  ON_HOLD
+}
+
+enum ContractItemPriority {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+enum ContractImpact {
+  NONE
+  MINOR
+  MODERATE
+  MAJOR
+}
+
+model ContractItem {
+  id          String              @id @default(uuid())
+  projectId   String
+  type        ContractItemType
+  itemNumber  String              // e.g. "CR-001" or "CCL-001"
+
+  // Core fields (from the "fiche de lecture" pattern)
+  title       String              // Domain / topic
+  description String?             // Detailed text / requirement description
+  clauseRef   String?             // e.g. "Chap. 4.2.1" - contract clause reference
+  specTitle   String?             // Referenced specification title
+  docRef      String?             // Document reference number
+  docRevision String?             // Document revision
+  docPage     String?             // Page reference (e.g. "P 11/36")
+
+  status      ContractItemStatus  @default(OPEN)
+  priority    ContractItemPriority @default(MEDIUM)
+  discipline  Discipline?
+  assigneeId  String?
+  dueDate     DateTime?
+  notes       String?
+  tags        String?             // comma-separated tags
+
+  // REQUIREMENT-specific: reading sheet fields
+  reqCategory String?             // Domain: Contractual, Donnees locales, Projet, etc.
+  reqAction   String?             // Required action / response
+  consequence String?             // Impact / consequence if not addressed
+  scopeLimit  String?             // Scope boundaries / limits
+
+  // CHANGE-specific fields
+  changeRequestedBy String?       // Who requested the change
+  changeDate        DateTime?     // Date change was requested
+  commercialImpact  ContractImpact @default(NONE)
+  commercialValue   Float?        // Monetary impact
+  scheduleImpact    ContractImpact @default(NONE)
+  scheduleDays      Int?          // Schedule impact in days
+  technicalImpact   String?       // Free text technical impact
+  clientRef         String?       // Client's reference number
+  deviationType     String?       // e.g. "Clarif", "ds offre technique", "note"
+
+  // Document link
+  documentId  String?
+
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  project     Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  assignee    User?     @relation("ContractItemAssignee", fields: [assigneeId], references: [id], onDelete: SetNull)
+  document    Document? @relation(fields: [documentId], references: [id], onDelete: SetNull)
+
+  @@unique([projectId, itemNumber])
+  @@index([projectId, type])
+}
+
+// ==========================================
+// Data Origin (AGO -- Approved & Guaranteed Origin)
+// ==========================================
+
+model DataOrigin {
+  id               String    @id @default(uuid())
+  equipmentId      String
+  fieldName        String    // "designPressure", "material", etc.
+  fieldValue       String    // snapshot of value at validation time
+  sourceEntryId    String?   // -> DocumentRegisterEntry (formal doc)
+  sourceDocumentId String?   // -> Document (uploaded file, if no register entry)
+  sourceRef        String?   // free-text doc reference (fallback)
+  sourceRevision   String?   // revision at time of validation
+  sourceIssueDate  DateTime? // issue date of the source document
+  sourcePage       String?   // page/clause reference
+  validatedById    String
+  validatedAt      DateTime  @default(now())
+  notes            String?
+  createdAt        DateTime  @default(now())
+
+  equipment      Equipment              @relation(fields: [equipmentId], references: [id], onDelete: Cascade)
+  sourceEntry    DocumentRegisterEntry? @relation(fields: [sourceEntryId], references: [id], onDelete: SetNull)
+  sourceDocument Document?              @relation(fields: [sourceDocumentId], references: [id], onDelete: SetNull)
+  validatedBy    User                   @relation("DataOriginValidator", fields: [validatedById], references: [id])
+
+  @@index([equipmentId, fieldName])
+}
+
+// ==========================================
+// Email Routing Rules
+// ==========================================
+
+enum EmailRouteTarget {
+  PROJECT_MANAGER
+  DISCIPLINE_LEAD
+  PROCUREMENT
+  SPECIFIC_USER
+}
+
+model EmailRoutingRule {
+  id               String              @id @default(uuid())
+  projectId        String
+  priority         Int                 @default(0)  // higher = evaluated first
+  name             String
+  senderDomain     String?             // e.g. "clientcorp.com"
+  senderEmail      String?             // exact email match
+  subjectContains  String?             // keyword in subject
+  isExternal       Boolean?            // match external only
+  target           EmailRouteTarget
+  targetUserId     String?             // for SPECIFIC_USER
+  targetDiscipline Discipline?         // for DISCIPLINE_LEAD
+  autoPurpose      EmailPurpose?       // auto-set purpose
+  autoIntent       EmailDocumentIntent? // auto-set document intent
+  active           Boolean             @default(true)
+  createdAt        DateTime            @default(now())
+
+  project    Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  targetUser User?   @relation("EmailRouteTargetUser", fields: [targetUserId], references: [id], onDelete: SetNull)
 }

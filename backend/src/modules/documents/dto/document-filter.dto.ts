@@ -1,6 +1,6 @@
 import { IsOptional, IsUUID, IsString, IsEnum } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
-import { DocumentCategory } from '@prisma/client';
+import { DocumentCategory, DocumentFolder } from '@prisma/client';
 
 export class DocumentFilterDto {
   @ApiProperty({ required: false })
@@ -27,6 +27,11 @@ export class DocumentFilterDto {
   @IsOptional()
   @IsEnum(DocumentCategory)
   category?: DocumentCategory;
+
+  @ApiProperty({ required: false, enum: DocumentFolder })
+  @IsOptional()
+  @IsEnum(DocumentFolder)
+  folder?: DocumentFolder;
 
   @ApiProperty({ required: false })
   @IsOptional()

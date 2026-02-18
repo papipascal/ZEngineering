@@ -4,6 +4,7 @@ interface ProjectInfo {
   id: string;
   name: string;
   status: string;
+  myRole?: string;
 }
 
 interface ProjectContextType {
@@ -44,4 +45,9 @@ export function useProject() {
 export function useProjectId(): string | undefined {
   const { project } = useContext(ProjectContext);
   return project?.id;
+}
+
+export function useIsProjectManager(): boolean {
+  const { project } = useProject();
+  return project?.myRole === 'owner' || project?.myRole === 'manager';
 }

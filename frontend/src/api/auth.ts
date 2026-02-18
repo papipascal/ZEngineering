@@ -21,4 +21,5 @@ export const authApi = {
     client.post<AuthResponse>('/api/auth/register', data),
 
   getMe: () => client.get<User>('/api/auth/me'),
+  listUsers: () => client.get<User[]>('/api/auth/users'),
 };

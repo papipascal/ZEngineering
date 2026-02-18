@@ -3,6 +3,8 @@ import {
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard.js';
+import { ProjectRoleGuard } from '../auth/project-role.guard.js';
+import { ProjectRoles } from '../auth/project-roles.decorator.js';
 import { ProjectService } from './project.service.js';
 import { CreateProjectDto } from './dto/create-project.dto.js';
 import { UpdateProjectDto } from './dto/update-project.dto.js';
@@ -18,9 +20,9 @@ export class ProjectController {
   constructor(private readonly projectService: ProjectService) {}
 
   @Get()
-  @ApiOperation({ summary: 'List all projects' })
-  findAll() {
-    return this.projectService.findAll();
+  @ApiOperation({ summary: 'List projects for current user (with role)' })
+  findAll(@Request() req: { user: { id: string } }) {
+    return this.projectService.findAll(req.user.id);
   }
 
   @Post()
@@ -34,12 +36,17 @@ export class ProjectController {
 
   @Get(':id')
   @ApiOperation({ summary: 'Get project details with members, partners, vendors' })
-  findOne(@Param('id') id: string) {
-    return this.projectService.findOne(id);
+  findOne(
+    @Param('id') id: string,
+    @Request() req: { user: { id: string } },
+  ) {
+    return this.projectService.findOne(id, req.user.id);
   }
 
   @Patch(':id')
-  @ApiOperation({ summary: 'Update project details' })
+  @UseGuards(ProjectRoleGuard)
+  @ProjectRoles('owner', 'manager')
+  @ApiOperation({ summary: 'Update project details (managers only)' })
   update(@Param('id') id: string, @Body() dto: UpdateProjectDto) {
     return this.projectService.update(id, dto);
   }
@@ -47,13 +54,17 @@ export class ProjectController {
   // --- Members ---
 
   @Post(':id/members')
-  @ApiOperation({ summary: 'Add a team member to the project' })
+  @UseGuards(ProjectRoleGuard)
+  @ProjectRoles('owner', 'manager')
+  @ApiOperation({ summary: 'Add a team member (managers only)' })
   addMember(@Param('id') id: string, @Body() dto: AddMemberDto) {
     return this.projectService.addMember(id, dto);
   }
 
   @Delete(':id/members/:userId')
-  @ApiOperation({ summary: 'Remove a team member from the project' })
+  @UseGuards(ProjectRoleGuard)
+  @ProjectRoles('owner', 'manager')
+  @ApiOperation({ summary: 'Remove a team member (managers only)' })
   removeMember(@Param('id') id: string, @Param('userId') userId: string) {
     return this.projectService.removeMember(id, userId);
   }
@@ -61,13 +72,17 @@ export class ProjectController {
   // --- Partners ---
 
   @Post(':id/partners')
-  @ApiOperation({ summary: 'Add a partner company' })
+  @UseGuards(ProjectRoleGuard)
+  @ProjectRoles('owner', 'manager')
+  @ApiOperation({ summary: 'Add a partner company (managers only)' })
   addPartner(@Param('id') id: string, @Body() dto: AddPartnerDto) {
     return this.projectService.addPartner(id, dto);
   }
 
   @Delete(':id/partners/:partnerId')
-  @ApiOperation({ summary: 'Remove a partner company' })
+  @UseGuards(ProjectRoleGuard)
+  @ProjectRoles('owner', 'manager')
+  @ApiOperation({ summary: 'Remove a partner company (managers only)' })
   removePartner(@Param('id') id: string, @Param('partnerId') partnerId: string) {
     return this.projectService.removePartner(partnerId);
   }
@@ -75,13 +90,17 @@ export class ProjectController {
   // --- Vendors ---
 
   @Post(':id/vendors')
-  @ApiOperation({ summary: 'Assign a vendor to the project' })
+  @UseGuards(ProjectRoleGuard)
+  @ProjectRoles('owner', 'manager')
+  @ApiOperation({ summary: 'Assign a vendor (managers only)' })
   assignVendor(@Param('id') id: string, @Body() dto: AssignVendorDto) {
     return this.projectService.assignVendor(id, dto);
   }
 
   @Delete(':id/vendors/:vendorId')
-  @ApiOperation({ summary: 'Remove a vendor from the project' })
+  @UseGuards(ProjectRoleGuard)
+  @ProjectRoles('owner', 'manager')
+  @ApiOperation({ summary: 'Remove a vendor (managers only)' })
   removeVendor(@Param('id') id: string, @Param('vendorId') vendorId: string) {
     return this.projectService.removeVendor(id, vendorId);
   }

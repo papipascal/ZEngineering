@@ -13,6 +13,9 @@ import { ProjectModule } from './modules/projects/project.module.js';
 import { DocumentRegisterModule } from './modules/document-register/document-register.module.js';
 import { TransmittalModule } from './modules/transmittals/transmittal.module.js';
 import { IncomingEmailModule } from './modules/incoming-emails/incoming-email.module.js';
+import { SearchModule } from './modules/search/search.module.js';
+import { ContractItemsModule } from './modules/contract-items/contract-items.module.js';
+import { DataOriginModule } from './modules/data-origin/data-origin.module.js';
 import { AppController } from './app.controller.js';
 import { AppService } from './app.service.js';
 
@@ -32,6 +35,9 @@ import { AppService } from './app.service.js';
     DocumentRegisterModule,
     TransmittalModule,
     IncomingEmailModule,
+    SearchModule,
+    ContractItemsModule,
+    DataOriginModule,
   ],
   controllers: [AppController],
   providers: [AppService],

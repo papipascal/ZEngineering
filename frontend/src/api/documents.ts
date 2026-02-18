@@ -7,6 +7,7 @@ export interface Document {
   fileSize: number;
   s3Key: string;
   category: string | null;
+  folder: string | null;
   description: string | null;
   projectId: string;
   equipmentId: string | null;
@@ -29,6 +30,7 @@ export interface DocumentFilter {
   vendorId?: string;
   discussionId?: string;
   category?: string;
+  folder?: string;
   search?: string;
 }
 
@@ -36,6 +38,7 @@ export const documentApi = {
   upload: (file: File, data: {
     projectId: string;
     category?: string;
+    folder?: string;
     description?: string;
     equipmentId?: string;
     vendorId?: string;

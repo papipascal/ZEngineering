@@ -29,4 +29,12 @@ export class AuthController {
   getMe(@Request() req: { user: { id: string } }) {
     return this.authService.getMe(req.user.id);
   }
+
+  @Get('users')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'List all users (for member selection)' })
+  listUsers() {
+    return this.authService.listUsers();
+  }
 }

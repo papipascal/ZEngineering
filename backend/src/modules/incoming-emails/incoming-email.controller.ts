@@ -33,7 +33,7 @@ export class IncomingEmailController {
   }
 
   @Patch(':id')
-  updateStatus(@Param('id') id: string, @Body() dto: UpdateIncomingEmailDto) {
-    return this.service.updateStatus(id, dto);
+  update(@Param('id') id: string, @Body() dto: UpdateIncomingEmailDto) {
+    return this.service.update(id, dto);
   }
 }

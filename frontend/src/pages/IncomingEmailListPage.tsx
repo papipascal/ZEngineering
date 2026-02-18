@@ -4,10 +4,33 @@ import {
   Paper, TextField, Box, Chip, InputAdornment, CircularProgress, Stack,
   MenuItem, Select, FormControl, InputLabel, Drawer, Button, Divider, SelectChangeEvent,
 } from '@mui/material';
-import { Search as SearchIcon, AttachFile as AttachIcon } from '@mui/icons-material';
+import { Search as SearchIcon, AttachFile as AttachIcon, Public as ExternalIcon } from '@mui/icons-material';
 import { incomingEmailApi, IncomingEmail } from '../api/incoming-emails';
 import { useProjectId } from '../auth/ProjectContext';
 import ExportExcelButton from '../components/ExportExcelButton';
+
+const PURPOSE_OPTIONS = ['', 'INFORMATION', 'QUERY', 'DOCUMENT_SUBMISSION', 'COMMENT_REQUEST', 'OTHER'];
+const PURPOSE_LABELS: Record<string, string> = {
+  INFORMATION: 'Information',
+  QUERY: 'Query',
+  DOCUMENT_SUBMISSION: 'Document Submission',
+  COMMENT_REQUEST: 'Comment Request',
+  OTHER: 'Other',
+};
+const PURPOSE_COLORS: Record<string, 'info' | 'warning' | 'success' | 'secondary' | 'default'> = {
+  INFORMATION: 'info',
+  QUERY: 'warning',
+  DOCUMENT_SUBMISSION: 'success',
+  COMMENT_REQUEST: 'secondary',
+  OTHER: 'default',
+};
+
+const DOC_INTENT_OPTIONS = ['', 'FOR_INFORMATION', 'AS_INPUT', 'FOR_COMMENTS'];
+const DOC_INTENT_LABELS: Record<string, string> = {
+  FOR_INFORMATION: 'For Information',
+  AS_INPUT: 'As Input',
+  FOR_COMMENTS: 'For Comments',
+};
 
 export default function IncomingEmailListPage() {
   const projectId = useProjectId();
@@ -15,8 +38,16 @@ export default function IncomingEmailListPage() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
+  const [purposeFilter, setPurposeFilter] = useState('');
+  const [externalFilter, setExternalFilter] = useState('');
   const [selected, setSelected] = useState<IncomingEmail | null>(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
+
+  // Classification edit state
+  const [editPurpose, setEditPurpose] = useState('');
+  const [editDocIntent, setEditDocIntent] = useState('');
+  const [editNotes, setEditNotes] = useState('');
+  const [saving, setSaving] = useState(false);
 
   const load = () => {
     setLoading(true);
@@ -24,14 +55,19 @@ export default function IncomingEmailListPage() {
     if (projectId) params.projectId = projectId;
     if (search) params.search = search;
     if (statusFilter) params.status = statusFilter;
+    if (purposeFilter) params.purpose = purposeFilter;
+    if (externalFilter) params.isExternal = externalFilter;
     incomingEmailApi.list(params).then((r) => setEmails(r.data)).finally(() => setLoading(false));
   };
 
-  useEffect(() => { load(); }, [search, statusFilter, projectId]);
+  useEffect(() => { load(); }, [search, statusFilter, purposeFilter, externalFilter, projectId]);
 
   const openDetail = async (email: IncomingEmail) => {
     const res = await incomingEmailApi.getById(email.id);
     setSelected(res.data);
+    setEditPurpose(res.data.purpose || '');
+    setEditDocIntent(res.data.documentIntent || '');
+    setEditNotes(res.data.notes || '');
     setDrawerOpen(true);
     if (email.status === 'UNREAD') {
       await incomingEmailApi.updateStatus(email.id, 'READ');
@@ -46,6 +82,21 @@ export default function IncomingEmailListPage() {
     load();
   };
 
+  const handleSaveClassification = async () => {
+    if (!selected) return;
+    setSaving(true);
+    try {
+      await incomingEmailApi.update(selected.id, {
+        purpose: editPurpose || undefined,
+        documentIntent: editDocIntent || undefined,
+        notes: editNotes || undefined,
+      });
+      load();
+    } finally {
+      setSaving(false);
+    }
+  };
+
   const formatSize = (bytes: number) => {
     if (bytes < 1024) return `${bytes} B`;
     if (bytes < 1048576) return `${(bytes / 1024).toFixed(1)} KB`;
@@ -57,12 +108,14 @@ export default function IncomingEmailListPage() {
       <Stack direction="row" justifyContent="space-between" alignItems="center" mb={1}>
         <Typography variant="h4">Inbox</Typography>
         <ExportExcelButton
-          data={emails.map((e) => ({ ...e, from: e.fromName ? `${e.fromName} <${e.fromAddress}>` : e.fromAddress, dateStr: new Date(e.receivedAt).toLocaleString(), attachmentCount: e._count?.attachments ?? 0 })) as unknown as Record<string, unknown>[]}
+          data={emails.map((e) => ({ ...e, from: e.fromName ? `${e.fromName} <${e.fromAddress}>` : e.fromAddress, dateStr: new Date(e.receivedAt).toLocaleString(), attachmentCount: e._count?.attachments ?? 0, purposeLabel: e.purpose ? PURPOSE_LABELS[e.purpose] || e.purpose : '', externalLabel: e.isExternal ? 'External' : 'Internal' })) as unknown as Record<string, unknown>[]}
           columns={[
             { key: 'from', header: 'From' },
             { key: 'subject', header: 'Subject' },
             { key: 'dateStr', header: 'Received' },
             { key: 'status', header: 'Status' },
+            { key: 'purposeLabel', header: 'Purpose' },
+            { key: 'externalLabel', header: 'Int/Ext' },
             { key: 'attachmentCount', header: 'Attachments' },
           ]}
           fileName="incoming-emails"
@@ -91,6 +144,23 @@ export default function IncomingEmailListPage() {
             <MenuItem value="ARCHIVED">Archived</MenuItem>
           </Select>
         </FormControl>
+        <FormControl size="small" sx={{ minWidth: 160 }}>
+          <InputLabel>Purpose</InputLabel>
+          <Select value={purposeFilter} label="Purpose" onChange={(e: SelectChangeEvent) => setPurposeFilter(e.target.value)}>
+            <MenuItem value="">All</MenuItem>
+            {PURPOSE_OPTIONS.filter(Boolean).map((p) => (
+              <MenuItem key={p} value={p}>{PURPOSE_LABELS[p] || p}</MenuItem>
+            ))}
+          </Select>
+        </FormControl>
+        <FormControl size="small" sx={{ minWidth: 140 }}>
+          <InputLabel>Int/Ext</InputLabel>
+          <Select value={externalFilter} label="Int/Ext" onChange={(e: SelectChangeEvent) => setExternalFilter(e.target.value)}>
+            <MenuItem value="">All</MenuItem>
+            <MenuItem value="false">Internal</MenuItem>
+            <MenuItem value="true">External</MenuItem>
+          </Select>
+        </FormControl>
       </Box>
 
       {loading ? (
@@ -104,6 +174,7 @@ export default function IncomingEmailListPage() {
                 <TableCell><strong>Subject</strong></TableCell>
                 <TableCell><strong>Date</strong></TableCell>
                 <TableCell><strong>Status</strong></TableCell>
+                <TableCell><strong>Purpose</strong></TableCell>
                 <TableCell align="center"><strong>Attachments</strong></TableCell>
               </TableRow>
             </TableHead>
@@ -120,12 +191,17 @@ export default function IncomingEmailListPage() {
                   onClick={() => openDetail(email)}
                 >
                   <TableCell>
-                    <Typography variant="body2" fontWeight={email.status === 'UNREAD' ? 'bold' : 'normal'}>
-                      {email.fromName || email.fromAddress}
-                    </Typography>
-                    {email.fromName && (
-                      <Typography variant="caption" color="text.secondary">{email.fromAddress}</Typography>
-                    )}
+                    <Stack direction="row" alignItems="center" spacing={0.5}>
+                      {email.isExternal && <ExternalIcon fontSize="small" color="warning" titleAccess="External sender" />}
+                      <Box>
+                        <Typography variant="body2" fontWeight={email.status === 'UNREAD' ? 'bold' : 'normal'}>
+                          {email.fromName || email.fromAddress}
+                        </Typography>
+                        {email.fromName && (
+                          <Typography variant="caption" color="text.secondary">{email.fromAddress}</Typography>
+                        )}
+                      </Box>
+                    </Stack>
                   </TableCell>
                   <TableCell>
                     <Typography variant="body2" fontWeight={email.status === 'UNREAD' ? 'bold' : 'normal'}>
@@ -137,9 +213,19 @@ export default function IncomingEmailListPage() {
                     <Chip
                       label={email.status}
                       size="small"
-                      color={email.status === 'UNREAD' ? 'primary' : email.status === 'READ' ? 'default' : 'default'}
+                      color={email.status === 'UNREAD' ? 'primary' : 'default'}
                       variant={email.status === 'ARCHIVED' ? 'outlined' : 'filled'}
                     />
+                  </TableCell>
+                  <TableCell>
+                    {email.purpose && (
+                      <Chip
+                        label={PURPOSE_LABELS[email.purpose] || email.purpose}
+                        size="small"
+                        color={PURPOSE_COLORS[email.purpose] || 'default'}
+                        variant="outlined"
+                      />
+                    )}
                   </TableCell>
                   <TableCell align="center">
                     {(email._count?.attachments ?? 0) > 0 && (
@@ -150,7 +236,7 @@ export default function IncomingEmailListPage() {
               ))}
               {emails.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={5} align="center">
+                  <TableCell colSpan={6} align="center">
                     <Typography color="text.secondary" sx={{ py: 4 }}>
                       No incoming emails. Configure IMAP settings to start receiving emails.
                     </Typography>
@@ -169,7 +255,10 @@ export default function IncomingEmailListPage() {
             <Stack spacing={1} mb={2}>
               <Box>
                 <Typography variant="body2" color="text.secondary">From</Typography>
-                <Typography>{selected.fromName ? `${selected.fromName} <${selected.fromAddress}>` : selected.fromAddress}</Typography>
+                <Stack direction="row" alignItems="center" spacing={1}>
+                  <Typography>{selected.fromName ? `${selected.fromName} <${selected.fromAddress}>` : selected.fromAddress}</Typography>
+                  {selected.isExternal && <Chip label="External" size="small" color="warning" variant="outlined" />}
+                </Stack>
               </Box>
               <Box>
                 <Typography variant="body2" color="text.secondary">To</Typography>
@@ -179,6 +268,48 @@ export default function IncomingEmailListPage() {
                 <Typography variant="body2" color="text.secondary">Received</Typography>
                 <Typography>{new Date(selected.receivedAt).toLocaleString()}</Typography>
               </Box>
+            </Stack>
+
+            <Divider sx={{ my: 2 }} />
+
+            {/* Classification Section */}
+            <Typography variant="subtitle2" gutterBottom>Classification</Typography>
+            <Stack spacing={2} mb={2}>
+              <FormControl size="small" fullWidth>
+                <InputLabel>Purpose</InputLabel>
+                <Select value={editPurpose} label="Purpose" onChange={(e) => setEditPurpose(e.target.value)}>
+                  <MenuItem value="">Not set</MenuItem>
+                  {PURPOSE_OPTIONS.filter(Boolean).map((p) => (
+                    <MenuItem key={p} value={p}>{PURPOSE_LABELS[p] || p}</MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+              <FormControl size="small" fullWidth>
+                <InputLabel>Document Intent</InputLabel>
+                <Select value={editDocIntent} label="Document Intent" onChange={(e) => setEditDocIntent(e.target.value)}>
+                  <MenuItem value="">Not set</MenuItem>
+                  {DOC_INTENT_OPTIONS.filter(Boolean).map((d) => (
+                    <MenuItem key={d} value={d}>{DOC_INTENT_LABELS[d] || d}</MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+              <TextField
+                size="small"
+                label="Notes"
+                value={editNotes}
+                onChange={(e) => setEditNotes(e.target.value)}
+                multiline
+                rows={2}
+                fullWidth
+              />
+              <Button
+                variant="contained"
+                size="small"
+                onClick={handleSaveClassification}
+                disabled={saving}
+              >
+                {saving ? 'Saving...' : 'Save Classification'}
+              </Button>
             </Stack>
 
             <Divider sx={{ my: 2 }} />

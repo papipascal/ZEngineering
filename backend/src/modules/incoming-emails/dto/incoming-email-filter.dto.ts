@@ -1,6 +1,6 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
-import { IsOptional, IsString, IsEnum } from 'class-validator';
-import { IncomingEmailStatus } from '@prisma/client';
+import { IsOptional, IsString, IsEnum, IsBooleanString } from 'class-validator';
+import { IncomingEmailStatus, EmailPurpose } from '@prisma/client';
 
 export class IncomingEmailFilterDto {
   @ApiPropertyOptional()
@@ -12,6 +12,16 @@ export class IncomingEmailFilterDto {
   @IsOptional()
   @IsEnum(IncomingEmailStatus)
   status?: IncomingEmailStatus;
+
+  @ApiPropertyOptional({ enum: EmailPurpose })
+  @IsOptional()
+  @IsEnum(EmailPurpose)
+  purpose?: EmailPurpose;
+
+  @ApiPropertyOptional({ description: 'Filter by external senders (true/false)' })
+  @IsOptional()
+  @IsBooleanString()
+  isExternal?: string;
 
   @ApiPropertyOptional()
   @IsOptional()

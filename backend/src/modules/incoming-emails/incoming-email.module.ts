@@ -2,10 +2,13 @@ import { Module } from '@nestjs/common';
 import { IncomingEmailController } from './incoming-email.controller.js';
 import { IncomingEmailService } from './incoming-email.service.js';
 import { ImapPollingService } from './imap-polling.service.js';
+import { EmailRouterService } from './email-router.service.js';
+import { WorkflowModule } from '../workflows/workflow.module.js';
 
 @Module({
+  imports: [WorkflowModule],
   controllers: [IncomingEmailController],
-  providers: [IncomingEmailService, ImapPollingService],
+  providers: [IncomingEmailService, ImapPollingService, EmailRouterService],
   exports: [IncomingEmailService],
 })
 export class IncomingEmailModule {}

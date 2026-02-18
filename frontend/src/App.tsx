@@ -19,6 +19,11 @@ import TransmittalListPage from './pages/TransmittalListPage';
 import TransmittalComposePage from './pages/TransmittalComposePage';
 import TransmittalDetailPage from './pages/TransmittalDetailPage';
 import IncomingEmailListPage from './pages/IncomingEmailListPage';
+import ProjectSetupPage from './pages/ProjectSetupPage';
+import SearchPage from './pages/SearchPage';
+import ContractRequirementsPage from './pages/ContractRequirementsPage';
+import ContractChangeLogPage from './pages/ContractChangeLogPage';
+import AgoReportPage from './pages/AgoReportPage';
 
 function App() {
   return (
@@ -42,6 +47,7 @@ function App() {
                 </ProtectedRoute>
               }
             >
+              <Route path="/search" element={<SearchPage />} />
               <Route path="/" element={<ProjectDashboardPage />} />
               <Route path="/equipment" element={<EquipmentListPage />} />
               <Route path="/equipment/:id" element={<EquipmentDetailPage />} />
@@ -56,6 +62,10 @@ function App() {
               <Route path="/transmittals/new" element={<TransmittalComposePage />} />
               <Route path="/transmittals/:id" element={<TransmittalDetailPage />} />
               <Route path="/incoming-emails" element={<IncomingEmailListPage />} />
+              <Route path="/contract-requirements" element={<ContractRequirementsPage />} />
+              <Route path="/contract-change-log" element={<ContractChangeLogPage />} />
+              <Route path="/ago-report" element={<AgoReportPage />} />
+              <Route path="/project-setup" element={<ProjectSetupPage />} />
             </Route>
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>

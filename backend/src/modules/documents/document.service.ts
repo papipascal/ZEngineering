@@ -39,6 +39,7 @@ export class DocumentService {
         mimeType: file.mimetype,
         s3Key,
         category: dto.category ?? 'OTHER',
+        folder: dto.folder ?? 'OTHER',
         description: dto.description,
         uploadedById,
         projectId: dto.projectId,
@@ -59,6 +60,7 @@ export class DocumentService {
     if (filter.vendorId) where.vendorId = filter.vendorId;
     if (filter.discussionId) where.discussionId = filter.discussionId;
     if (filter.category) where.category = filter.category;
+    if (filter.folder) where.folder = filter.folder;
     if (filter.search) {
       where.OR = [
         { fileName: { contains: filter.search, mode: 'insensitive' } },
