@@ -25,6 +25,8 @@ import {
   AccountTree as OrgIcon,
   History as AuditIcon,
   Notifications as NotifIcon,
+  Person as PersonIcon,
+  AssignmentTurnedIn as ProposalsIcon,
 } from '@mui/icons-material';
 import { useAuth } from '../auth/AuthContext';
 import { useProject, useIsProjectManager } from '../auth/ProjectContext';
@@ -44,6 +46,7 @@ const navItems = [
   { label: 'AGO Report', path: '/ago-report', icon: <AgoIcon /> },
   { label: 'Transmittals', path: '/transmittals', icon: <SendIcon /> },
   { label: 'Inbox', path: '/incoming-emails', icon: <InboxIcon /> },
+  { label: 'Doc Proposals', path: '/document-proposals', icon: <ProposalsIcon /> },
   { label: 'Documents', path: '/documents', icon: <DocumentIcon /> },
   { label: 'Vendors', path: '/vendors', icon: <VendorIcon /> },
   { label: 'Organization', path: '/organization', icon: <OrgIcon /> },
@@ -183,6 +186,11 @@ export default function Layout() {
           <Menu anchorEl={anchorEl} open={!!anchorEl} onClose={() => setAnchorEl(null)}>
             <MenuItem disabled>
               <Typography variant="body2">{user?.email}</Typography>
+            </MenuItem>
+            <Divider />
+            <MenuItem onClick={() => { navigate('/profile'); setAnchorEl(null); }}>
+              <ListItemIcon><PersonIcon fontSize="small" /></ListItemIcon>
+              Mon profil
             </MenuItem>
             <Divider />
             <MenuItem onClick={() => { logout(); navigate('/login'); setAnchorEl(null); }}>

@@ -143,6 +143,41 @@ export class OrganizationService {
   }
 
   // ==========================================
+  // Authorization helpers
+  // ==========================================
+
+  /**
+   * Returns true if the user can edit the org chart for the given project.
+   * Priority:
+   *   1. User assigned to chef_de_projet in the org chart
+   *   2. If no chef assigned → fall back to ProjectMember.role owner/manager
+   * Global admin bypass is handled in the controller.
+   */
+  async isUserAuthorizedToEditOrg(projectId: string, userId: string): Promise<boolean> {
+    const chefPosition = await this.prisma.projectOrganization.findUnique({
+      where: { projectId_role: { projectId, role: 'chef_de_projet' } },
+    });
+
+    if (chefPosition?.userId) {
+      return chefPosition.userId === userId;
+    }
+
+    // No chef assigned: fall back to project member role
+    return this.isUserProjectManager(projectId, userId);
+  }
+
+  /**
+   * Returns true if user has ProjectMember.role owner or manager.
+   * Used for /init endpoint (before a chef is assigned).
+   */
+  async isUserProjectManager(projectId: string, userId: string): Promise<boolean> {
+    const membership = await this.prisma.projectMember.findUnique({
+      where: { projectId_userId: { projectId, userId } },
+    });
+    return membership?.role === 'owner' || membership?.role === 'manager';
+  }
+
+  // ==========================================
   // Helpers
   // ==========================================
 

@@ -21,6 +21,7 @@ import { DashboardModule } from './modules/dashboard/dashboard.module.js';
 import { NotificationModule } from './modules/notifications/notification.module.js';
 import { AuditModule } from './modules/audit/audit.module.js';
 import { ExportModule } from './modules/export/export.module.js';
+import { DocumentProposalsModule } from './modules/document-proposals/document-proposals.module.js';
 import { AppController } from './app.controller.js';
 import { AppService } from './app.service.js';
 
@@ -48,6 +49,7 @@ import { AppService } from './app.service.js';
     DashboardModule,
     AuditModule,
     ExportModule,
+    DocumentProposalsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

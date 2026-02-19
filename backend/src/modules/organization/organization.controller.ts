@@ -6,6 +6,8 @@ import {
   Body,
   Param,
   UseGuards,
+  Request,
+  ForbiddenException,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard.js';
@@ -44,11 +46,18 @@ export class OrganizationController {
   }
 
   @Put('project/:projectId')
-  @ApiOperation({ summary: 'Update project organization (Doc Controller)' })
-  updateProjectOrg(
+  @ApiOperation({ summary: 'Update project organization (Chef de Projet only)' })
+  async updateProjectOrg(
     @Param('projectId') projectId: string,
     @Body() dto: UpdateOrgDto,
+    @Request() req: { user: { id: string; role: string } },
   ) {
+    if (req.user.role !== 'admin') {
+      const authorized = await this.orgService.isUserAuthorizedToEditOrg(projectId, req.user.id);
+      if (!authorized) {
+        throw new ForbiddenException('Seul le Chef de Projet peut modifier l\'organigramme');
+      }
+    }
     return this.orgService.updateProjectOrg(projectId, dto);
   }
 
@@ -59,17 +68,33 @@ export class OrganizationController {
   }
 
   @Put('project/:projectId/tree')
-  @ApiOperation({ summary: 'Update project tree structure (Doc Controller)' })
-  updateProjectTree(
+  @ApiOperation({ summary: 'Update project tree structure (Chef de Projet only)' })
+  async updateProjectTree(
     @Param('projectId') projectId: string,
     @Body() dto: UpdateTreeDto,
+    @Request() req: { user: { id: string; role: string } },
   ) {
+    if (req.user.role !== 'admin') {
+      const authorized = await this.orgService.isUserAuthorizedToEditOrg(projectId, req.user.id);
+      if (!authorized) {
+        throw new ForbiddenException('Seul le Chef de Projet peut modifier l\'arborescence');
+      }
+    }
     return this.orgService.updateProjectTree(projectId, dto);
   }
 
   @Post('project/:projectId/init')
   @ApiOperation({ summary: 'Initialize project organization and tree from defaults' })
-  initProject(@Param('projectId') projectId: string) {
+  async initProject(
+    @Param('projectId') projectId: string,
+    @Request() req: { user: { id: string; role: string } },
+  ) {
+    if (req.user.role !== 'admin') {
+      const authorized = await this.orgService.isUserProjectManager(projectId, req.user.id);
+      if (!authorized) {
+        throw new ForbiddenException('Seul un gestionnaire de projet peut initialiser l\'organisation');
+      }
+    }
     return this.orgService.initProjectOrganization(projectId);
   }
 }

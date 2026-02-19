@@ -26,6 +26,8 @@ import ContractChangeLogPage from './pages/ContractChangeLogPage';
 import AgoReportPage from './pages/AgoReportPage';
 import OrganizationPage from './pages/OrganizationPage';
 import AuditPage from './pages/AuditPage';
+import ProfilePage from './pages/ProfilePage';
+import DocumentProposalsPage from './pages/DocumentProposalsPage';
 
 function App() {
   return (
@@ -70,6 +72,8 @@ function App() {
               <Route path="/organization" element={<OrganizationPage />} />
               <Route path="/audit" element={<AuditPage />} />
               <Route path="/project-setup" element={<ProjectSetupPage />} />
+              <Route path="/profile" element={<ProfilePage />} />
+              <Route path="/document-proposals" element={<DocumentProposalsPage />} />
             </Route>
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>

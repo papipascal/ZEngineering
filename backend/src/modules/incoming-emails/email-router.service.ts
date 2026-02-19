@@ -3,7 +3,7 @@ import { Discipline } from '@prisma/client';
 import { PrismaService } from '../../prisma/prisma.service.js';
 import { WorkflowService } from '../workflows/workflow.service.js';
 
-const DISCIPLINE_KEYWORDS: Record<string, Discipline> = {
+export const DISCIPLINE_KEYWORDS: Record<string, Discipline> = {
   // PIPING
   piping: 'PIPING', tuyauterie: 'PIPING', pipe: 'PIPING',
   // ELECTRICAL

@@ -6,6 +6,8 @@ export interface User {
   name: string;
   role: string;
   discipline: string | null;
+  phone: string | null;
+  title: string | null;
 }
 
 interface AuthResponse {
@@ -22,4 +24,15 @@ export const authApi = {
 
   getMe: () => client.get<User>('/api/auth/me'),
   listUsers: () => client.get<User[]>('/api/auth/users'),
+
+  updateProfile: (data: {
+    name?: string;
+    email?: string;
+    phone?: string;
+    discipline?: string;
+    title?: string;
+  }) => client.patch<User>('/api/auth/profile', data),
+
+  changePassword: (data: { currentPassword: string; newPassword: string }) =>
+    client.patch<{ message: string }>('/api/auth/password', data),
 };

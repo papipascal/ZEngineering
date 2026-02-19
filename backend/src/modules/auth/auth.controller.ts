@@ -1,8 +1,9 @@
-import { Controller, Post, Get, Body, UseGuards, Request } from '@nestjs/common';
+import { Controller, Post, Get, Patch, Body, UseGuards, Request } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { AuthService } from './auth.service.js';
 import { RegisterDto } from './dto/register.dto.js';
 import { LoginDto } from './dto/login.dto.js';
+import { UpdateProfileDto, ChangePasswordDto } from './dto/update-profile.dto.js';
 import { JwtAuthGuard } from './jwt-auth.guard.js';
 
 @ApiTags('Auth')
@@ -36,5 +37,27 @@ export class AuthController {
   @ApiOperation({ summary: 'List all users (for member selection)' })
   listUsers() {
     return this.authService.listUsers();
+  }
+
+  @Patch('profile')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Update current user profile (name, email, phone, discipline, title)' })
+  updateProfile(
+    @Request() req: { user: { id: string } },
+    @Body() dto: UpdateProfileDto,
+  ) {
+    return this.authService.updateProfile(req.user.id, dto);
+  }
+
+  @Patch('password')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Change current user password' })
+  changePassword(
+    @Request() req: { user: { id: string } },
+    @Body() dto: ChangePasswordDto,
+  ) {
+    return this.authService.changePassword(req.user.id, dto);
   }
 }

@@ -1,7 +1,11 @@
 import { Injectable, Logger, OnModuleInit, OnModuleDestroy } from '@nestjs/common';
+import { Discipline } from '@prisma/client';
 import { PrismaService } from '../../prisma/prisma.service.js';
 import { StorageService } from '../storage/storage.service.js';
 import { EmailRouterService } from './email-router.service.js';
+import { EmailWhitelistService } from './email-whitelist.service.js';
+import { EmailClassificationService } from './email-classification.service.js';
+import { NotificationService } from '../notifications/notification.service.js';
 import { ImapFlow } from 'imapflow';
 import { v4 as uuid } from 'uuid';
 
@@ -15,6 +19,9 @@ export class ImapPollingService implements OnModuleInit, OnModuleDestroy {
     private prisma: PrismaService,
     private storageService: StorageService,
     private emailRouter: EmailRouterService,
+    private whitelistService: EmailWhitelistService,
+    private classificationService: EmailClassificationService,
+    private notificationService: NotificationService,
   ) {}
 
   onModuleInit() {
@@ -24,7 +31,6 @@ export class ImapPollingService implements OnModuleInit, OnModuleDestroy {
     }
     const interval = parseInt(process.env.IMAP_POLL_INTERVAL || '60', 10) * 1000;
     this.logger.log(`IMAP polling enabled (every ${interval / 1000}s) for ${process.env.IMAP_HOST}`);
-    // Initial poll after 5s, then on interval
     setTimeout(() => this.poll(), 5000);
     this.timer = setInterval(() => this.poll(), interval);
   }
@@ -98,6 +104,7 @@ export class ImapPollingService implements OnModuleInit, OnModuleDestroy {
 
     const project = await this.prisma.project.findFirst({
       where: { projectEmail: { equals: toAddress, mode: 'insensitive' } },
+      select: { id: true, name: true, docNumberPattern: true },
     });
     if (!project) {
       this.logger.debug(`No project matched for ${toAddress}`);
@@ -109,18 +116,52 @@ export class ImapPollingService implements OnModuleInit, OnModuleDestroy {
     const subject = envelope.subject || '(no subject)';
     const receivedAt = envelope.date || new Date();
 
+    // Auto-detect if sender is external (not a registered user)
+    const knownUser = await this.prisma.user.findFirst({
+      where: { email: { equals: fromAddress, mode: 'insensitive' } },
+    });
+    const isExternal = !knownUser;
+
+    // Whitelist check (only for external senders)
+    if (isExternal) {
+      const authorized = await this.whitelistService.isAuthorizedSender(project.id, fromAddress);
+      if (!authorized) {
+        await this.prisma.incomingEmail.create({
+          data: {
+            projectId: project.id,
+            messageId,
+            fromAddress,
+            fromName,
+            toAddress,
+            subject,
+            receivedAt,
+            isExternal: true,
+            isBlocked: true,
+            blockReason: 'Sender not in project whitelist',
+          },
+        });
+        await client.messageFlagsAdd(String(msg.seq), ['\\Seen']);
+        this.logger.warn(`Blocked external email from ${fromAddress} — not in whitelist for project ${project.name}`);
+        return;
+      }
+    }
+
     // Parse body text from source
     let bodyText: string | null = null;
     if (msg.source) {
       const sourceStr = msg.source.toString();
-      // Simple extraction: take content after double newline
       const bodyStart = sourceStr.indexOf('\r\n\r\n');
       if (bodyStart > -1) {
-        bodyText = sourceStr.substring(bodyStart + 4).substring(0, 10000); // Limit to 10k chars
+        bodyText = sourceStr.substring(bodyStart + 4).substring(0, 10000);
       }
     }
 
-    // Process attachments
+    // Classify email discipline and suggest tree node
+    const textToClassify = `${subject} ${bodyText ?? ''}`;
+    const classifiedDiscipline = this.classificationService.classifyDiscipline(textToClassify);
+    const classifiedTreeNodeId = await this.classificationService.suggestTreeNode(project.id, classifiedDiscipline);
+
+    // Download attachments
     const attachmentDocs: Array<{ fileName: string; fileSize: number; mimeType: string; s3Key: string }> = [];
     if (msg.bodyStructure?.childNodes) {
       for (const part of msg.bodyStructure.childNodes) {
@@ -135,12 +176,7 @@ export class ImapPollingService implements OnModuleInit, OnModuleDestroy {
             const fileName = part.dispositionParameters?.filename || part.parameters?.name || `attachment-${uuid()}`;
             const s3Key = `projects/${project.id}/inbox/${uuid()}-${fileName}`;
             await this.storageService.upload(s3Key, buffer, part.type || 'application/octet-stream');
-            attachmentDocs.push({
-              fileName,
-              fileSize: buffer.length,
-              mimeType: part.type || 'application/octet-stream',
-              s3Key,
-            });
+            attachmentDocs.push({ fileName, fileSize: buffer.length, mimeType: part.type || 'application/octet-stream', s3Key });
           } catch (err) {
             this.logger.error(`Failed to download attachment ${part.part}`, err instanceof Error ? err.message : err);
           }
@@ -148,13 +184,14 @@ export class ImapPollingService implements OnModuleInit, OnModuleDestroy {
       }
     }
 
-    // Auto-detect if sender is external (not a registered user)
-    const knownUser = await this.prisma.user.findFirst({
-      where: { email: { equals: fromAddress, mode: 'insensitive' } },
+    // Determine uploader (project owner fallback)
+    const ownerMember = await this.prisma.projectMember.findFirst({
+      where: { projectId: project.id, role: 'owner' },
+      select: { userId: true },
     });
-    const isExternal = !knownUser;
+    const fallbackUserId = ownerMember?.userId ?? (await this.prisma.user.findFirst({ select: { id: true } }))!.id;
 
-    // Create IncomingEmail + Document records in a transaction
+    // Create IncomingEmail + Documents + DocumentProposals in one transaction
     const createdEmail = await this.prisma.$transaction(async (tx) => {
       const incomingEmail = await tx.incomingEmail.create({
         data: {
@@ -167,21 +204,38 @@ export class ImapPollingService implements OnModuleInit, OnModuleDestroy {
           bodyText,
           receivedAt,
           isExternal,
+          classifiedDiscipline: classifiedDiscipline ?? undefined,
+          classifiedTreeNodeId: classifiedTreeNodeId ?? undefined,
         },
       });
 
       for (const att of attachmentDocs) {
-        await tx.document.create({
+        const doc = await tx.document.create({
           data: {
             ...att,
             category: 'OTHER',
             folder: 'EMAILS',
             projectId: project.id,
-            uploadedById: (await tx.projectMember.findFirst({
-              where: { projectId: project.id, role: 'owner' },
-              select: { userId: true },
-            }))?.userId || (await tx.user.findFirst({ select: { id: true } }))!.id,
+            uploadedById: fallbackUserId,
             incomingEmailId: incomingEmail.id,
+          },
+        });
+
+        // Extract doc number from filename + subject
+        const proposedDocNumber = this.classificationService.extractDocNumber(
+          `${att.fileName} ${subject}`,
+          project.docNumberPattern,
+        );
+
+        await tx.documentProposal.create({
+          data: {
+            projectId: project.id,
+            incomingEmailId: incomingEmail.id,
+            documentId: doc.id,
+            proposedDocNumber: proposedDocNumber ?? undefined,
+            proposedTitle: att.fileName.replace(/\.[^.]+$/, ''), // filename without extension
+            proposedDiscipline: classifiedDiscipline ?? undefined,
+            proposedTreeNodeId: classifiedTreeNodeId ?? undefined,
           },
         });
       }
@@ -189,14 +243,31 @@ export class ImapPollingService implements OnModuleInit, OnModuleDestroy {
       return incomingEmail;
     });
 
-    // Route the email to the appropriate person/workflow
+    // Notify discipline lead if we have a discipline
+    if (classifiedDiscipline && attachmentDocs.length > 0) {
+      const disciplineMember = await this.prisma.projectMember.findFirst({
+        where: { projectId: project.id, user: { discipline: classifiedDiscipline as Discipline } },
+        select: { userId: true },
+      });
+      if (disciplineMember) {
+        this.notificationService.emit({
+          type: 'document_submitted',
+          title: 'New Document Proposals',
+          message: `${attachmentDocs.length} attachment(s) from ${fromAddress} need review (${classifiedDiscipline})`,
+          projectId: project.id,
+          targetUserId: disciplineMember.userId,
+          data: { incomingEmailId: createdEmail.id },
+        });
+      }
+    }
+
+    // Route the email
     try {
       await this.emailRouter.routeEmail(createdEmail.id, project.id);
     } catch (err) {
       this.logger.error(`Email routing failed for "${subject}"`, err instanceof Error ? err.message : err);
     }
 
-    // Mark as seen in IMAP
     await client.messageFlagsAdd(String(msg.seq), ['\\Seen']);
     this.logger.log(`Processed email "${subject}" from ${fromAddress} for project ${project.name}`);
   }

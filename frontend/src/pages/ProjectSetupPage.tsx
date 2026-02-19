@@ -31,6 +31,7 @@ export default function ProjectSetupPage() {
   const [emailField, setEmailField] = useState('');
   const [emailSaving, setEmailSaving] = useState(false);
   const [emailSaved, setEmailSaved] = useState(false);
+  const [docNumberPattern, setDocNumberPattern] = useState('');
 
   // Project info editing
   const [projectName, setProjectName] = useState('');
@@ -60,6 +61,7 @@ export default function ProjectSetupPage() {
       projectApi.getById(selectedProject.id).then((r) => {
         setProjectDetail(r.data);
         setEmailField(r.data.projectEmail || '');
+        setDocNumberPattern((r.data as any).docNumberPattern || '');
         setProjectName(r.data.name);
         setProjectDesc(r.data.description || '');
         setClientName(r.data.clientName || '');
@@ -80,7 +82,10 @@ export default function ProjectSetupPage() {
     setEmailSaving(true);
     setEmailSaved(false);
     try {
-      await projectApi.update(selectedProject.id, { projectEmail: emailField || null } as any);
+      await projectApi.update(selectedProject.id, {
+        projectEmail: emailField || null,
+        docNumberPattern: docNumberPattern || null,
+      } as any);
       setEmailSaved(true);
       setTimeout(() => setEmailSaved(false), 3000);
     } finally {
@@ -199,32 +204,45 @@ export default function ProjectSetupPage() {
             <EmailIcon color="primary" />
             <Typography variant="h6">Email Settings</Typography>
           </Stack>
-          <Stack direction="row" alignItems="center" spacing={2} flexWrap="wrap">
+          <Stack spacing={2}>
+            <Stack direction="row" alignItems="center" spacing={2} flexWrap="wrap">
+              <TextField
+                size="small"
+                label="Project Email Address"
+                value={emailField}
+                onChange={(e) => { setEmailField(e.target.value); setEmailSaved(false); }}
+                placeholder="e.g. project-ua@company.com"
+                sx={{ minWidth: 300 }}
+              />
+              <Box sx={{ ml: 'auto' }}>
+                <Chip
+                  label={imapStatus?.configured ? `IMAP: ${imapStatus.host}` : 'IMAP: Not configured'}
+                  size="small"
+                  color={imapStatus?.configured ? 'success' : 'default'}
+                  variant="outlined"
+                />
+              </Box>
+            </Stack>
             <TextField
               size="small"
-              label="Project Email Address"
-              value={emailField}
-              onChange={(e) => { setEmailField(e.target.value); setEmailSaved(false); }}
-              placeholder="e.g. project-ua@company.com"
-              sx={{ minWidth: 300 }}
+              label="Document Number Pattern (regex)"
+              value={docNumberPattern}
+              onChange={(e) => { setDocNumberPattern(e.target.value); setEmailSaved(false); }}
+              placeholder={String.raw`e.g. [A-Z]{2}-\d{3}-[A-Z]{2,4}-\d{3}`}
+              helperText="Regex used to extract document numbers from attachment filenames and email subjects"
+              sx={{ maxWidth: 500 }}
             />
-            <Button
-              variant="contained"
-              size="small"
-              onClick={handleSaveEmail}
-              disabled={emailSaving || emailField === (projectDetail.projectEmail || '')}
-            >
-              {emailSaving ? 'Saving...' : 'Save'}
-            </Button>
-            {emailSaved && <Alert severity="success" sx={{ py: 0 }}>Saved</Alert>}
-            <Box sx={{ ml: 'auto' }}>
-              <Chip
-                label={imapStatus?.configured ? `IMAP: ${imapStatus.host}` : 'IMAP: Not configured'}
+            <Stack direction="row" alignItems="center" spacing={2}>
+              <Button
+                variant="contained"
                 size="small"
-                color={imapStatus?.configured ? 'success' : 'default'}
-                variant="outlined"
-              />
-            </Box>
+                onClick={handleSaveEmail}
+                disabled={emailSaving}
+              >
+                {emailSaving ? 'Saving...' : 'Save Email Settings'}
+              </Button>
+              {emailSaved && <Alert severity="success" sx={{ py: 0 }}>Saved</Alert>}
+            </Stack>
           </Stack>
           {!imapStatus?.configured && (
             <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: 'block' }}>

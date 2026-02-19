@@ -1,9 +1,10 @@
 import {
-  Controller, Get, Post, Patch, Delete, Param, Body, Query, UseGuards,
+  Controller, Get, Post, Patch, Delete, Param, Body, Query, UseGuards, Request,
 } from '@nestjs/common';
-import { ApiTags, ApiBearerAuth, ApiOperation, ApiQuery } from '@nestjs/swagger';
+import { ApiTags, ApiBearerAuth, ApiOperation } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard.js';
 import { IncomingEmailService } from './incoming-email.service.js';
+import { EmailWhitelistService } from './email-whitelist.service.js';
 import { IncomingEmailFilterDto } from './dto/incoming-email-filter.dto.js';
 import { UpdateIncomingEmailDto } from './dto/update-incoming-email.dto.js';
 import { CreateRoutingRuleDto, UpdateRoutingRuleDto } from './dto/create-routing-rule.dto.js';
@@ -14,7 +15,10 @@ import { ReplyEmailDto } from './dto/reply-email.dto.js';
 @UseGuards(JwtAuthGuard)
 @Controller('api/incoming-emails')
 export class IncomingEmailController {
-  constructor(private readonly service: IncomingEmailService) {}
+  constructor(
+    private readonly service: IncomingEmailService,
+    private readonly whitelistService: EmailWhitelistService,
+  ) {}
 
   // ==========================================
   // IMAP Status
@@ -85,5 +89,35 @@ export class IncomingEmailController {
   @ApiOperation({ summary: 'Delete an email routing rule' })
   deleteRule(@Param('id') id: string) {
     return this.service.deleteRule(id);
+  }
+
+  // ==========================================
+  // Sender Whitelist
+  // ==========================================
+
+  @Get('whitelist')
+  @ApiOperation({ summary: 'List authorized external senders for a project' })
+  listWhitelist(@Query('projectId') projectId: string) {
+    return this.whitelistService.listWhitelist(projectId);
+  }
+
+  @Post('whitelist')
+  @ApiOperation({ summary: 'Add email or domain to project sender whitelist' })
+  addToWhitelist(
+    @Body() body: { projectId: string; emailOrDomain: string; label?: string },
+    @Request() req: { user: { id: string } },
+  ) {
+    return this.whitelistService.addToWhitelist({
+      projectId: body.projectId,
+      emailOrDomain: body.emailOrDomain.toLowerCase().trim(),
+      label: body.label,
+      addedByUserId: req.user.id,
+    });
+  }
+
+  @Delete('whitelist/:id')
+  @ApiOperation({ summary: 'Remove entry from sender whitelist' })
+  removeFromWhitelist(@Param('id') id: string) {
+    return this.whitelistService.removeFromWhitelist(id);
   }
 }

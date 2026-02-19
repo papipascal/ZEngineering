@@ -7,6 +7,7 @@ interface AuthContextType {
   login: (email: string, password: string) => Promise<void>;
   logout: () => void;
   loading: boolean;
+  refreshUser: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType>(null!);
@@ -53,8 +54,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(null);
   };
 
+  const refreshUser = async () => {
+    if (!token) return;
+    try {
+      const res = await authApi.getMe();
+      setUser(res.data);
+      localStorage.setItem('user', JSON.stringify(res.data));
+    } catch {
+      // token may have expired, leave state as-is
+    }
+  };
+
   return (
-    <AuthContext.Provider value={{ user, token, login, logout, loading }}>
+    <AuthContext.Provider value={{ user, token, login, logout, loading, refreshUser }}>
       {children}
     </AuthContext.Provider>
   );
