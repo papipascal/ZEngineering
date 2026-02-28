@@ -139,12 +139,13 @@ const ARCH_ITEMS = [
   'Déploiement: Docker images → Synology NAS (docker-compose.nas.yml)',
 ];
 
-// ── What\'s new v3.2 ───────────────────────────────────────────────────────────
+// ── What\'s new v3.3 ───────────────────────────────────────────────────────────
 const WHATS_NEW = [
-  'Whitelist emails par adresse ou domaine (@licensortech.com) avec CRUD complet',
-  'Propositions de documents auto-générées depuis emails entrants avec pièces jointes',
-  'Profil utilisateur : mise à jour nom, téléphone, changement de mot de passe sécurisé',
-  'Page organigramme : protection par rôle chef de projet pour les modifications',
+  'Guide de démonstration client complet (DEMO-GUIDE.md) — 21 modules, ~60 min',
+  'Script de test interactif demo-runner.mjs — 90 tests API, 21 sections avec pauses',
+  'Package de déploiement NAS clé en main (docker-compose + install.sh)',
+  'Fix logging IMAP : affichage du code d\'erreur serveur complet',
+  'Fix ordre des routes whitelist dans le contrôleur email',
 ];
 
 export default function ZEngineeringPage() {
@@ -159,7 +160,7 @@ export default function ZEngineeringPage() {
               <Stack direction="row" spacing={1.5} alignItems="center" mb={0.5}>
                 <Typography variant="h3" fontWeight="bold">Zen-gineering</Typography>
                 <Chip
-                  label="v3.2"
+                  label="v3.3"
                   size="small"
                   sx={{ bgcolor: 'rgba(255,255,255,0.25)', color: 'white', fontWeight: 'bold', fontSize: '0.85rem' }}
                 />
@@ -183,29 +184,30 @@ export default function ZEngineeringPage() {
               <Stack direction="row" spacing={1.5} flexWrap="wrap" useFlexGap>
                 <Button
                   variant="contained"
-                  startIcon={<RocketLaunch />}
-                  href="/zengineering-app/"
-                  sx={{ bgcolor: 'rgba(255,255,255,0.25)', color: 'white', '&:hover': { bgcolor: 'rgba(255,255,255,0.4)' } }}
-                >
-                  Lancer l'application
-                </Button>
-                <Button
-                  variant="contained"
                   startIcon={<GitHub />}
                   href="https://github.com/papipascal/ZEngineering"
                   target="_blank"
-                  sx={{ bgcolor: 'rgba(0,0,0,0.3)', '&:hover': { bgcolor: 'rgba(0,0,0,0.5)' } }}
+                  sx={{ bgcolor: 'rgba(255,255,255,0.25)', color: 'white', '&:hover': { bgcolor: 'rgba(255,255,255,0.4)' } }}
                 >
                   Code source
                 </Button>
                 <Button
-                  variant="outlined"
-                  startIcon={<OpenInNew />}
+                  variant="contained"
+                  startIcon={<RocketLaunch />}
                   href="https://github.com/papipascal/ZEngineering#readme"
                   target="_blank"
-                  sx={{ borderColor: 'rgba(255,255,255,0.5)', color: 'white', '&:hover': { borderColor: 'white' } }}
+                  sx={{ bgcolor: 'rgba(0,0,0,0.3)', '&:hover': { bgcolor: 'rgba(0,0,0,0.5)' } }}
                 >
                   Documentation
+                </Button>
+                <Button
+                  variant="outlined"
+                  startIcon={<OpenInNew />}
+                  href="/downloads/DEMO-GUIDE.md"
+                  download
+                  sx={{ borderColor: 'rgba(255,255,255,0.5)', color: 'white', '&:hover': { borderColor: 'white' } }}
+                >
+                  Guide de démo
                 </Button>
               </Stack>
             </Box>
@@ -219,7 +221,7 @@ export default function ZEngineeringPage() {
         icon={<CheckCircle />}
         sx={{ mb: 3, '& .MuiAlert-message': { width: '100%' } }}
       >
-        <Typography variant="subtitle2" fontWeight="bold" mb={0.5}>Nouveautés v3.2</Typography>
+        <Typography variant="subtitle2" fontWeight="bold" mb={0.5}>Nouveautés v3.3</Typography>
         <Stack spacing={0.5}>
           {WHATS_NEW.map((item) => (
             <Stack key={item} direction="row" spacing={1} alignItems="flex-start">
@@ -230,6 +232,7 @@ export default function ZEngineeringPage() {
         </Stack>
       </Alert>
 
+      {/* ── Feature categories ── */}
       {/* ── Feature categories ── */}
       <Typography variant="h4" gutterBottom>Fonctionnalités — 5 domaines</Typography>
 

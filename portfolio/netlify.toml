@@ -1,0 +1,30 @@
+# ============================================================
+# Zen-gineering Portfolio — Configuration Netlify
+# ============================================================
+
+[build]
+  command = "npm run build"
+  publish = "dist"
+
+# ── SPA fallback ─────────────────────────────────────────────
+[[redirects]]
+  from = "/*"
+  to   = "/index.html"
+  status = 200
+
+# ── Headers téléchargements ───────────────────────────────────
+[[headers]]
+  for = "/downloads/*.docx"
+  [headers.values]
+    Content-Type        = "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+    Content-Disposition = "attachment"
+
+[[headers]]
+  for = "/downloads/*.md"
+  [headers.values]
+    Content-Type = "text/plain; charset=utf-8"
+
+[[headers]]
+  for = "/downloads/*.mjs"
+  [headers.values]
+    Content-Type = "text/plain; charset=utf-8"
