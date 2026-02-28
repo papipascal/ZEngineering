@@ -5,8 +5,49 @@ import {
   Engineering, GitHub, OpenInNew, CheckCircle, Storage, Code, Email,
   Description, Assignment, People, Settings, RocketLaunch, Dashboard,
   AccountTree, Search, Security, Notifications, FileDownload, MailOutline,
-  TrackChanges, Article, Person, Timeline, FolderOpen,
+  TrackChanges, Article, Person, Timeline, FolderOpen, PlayCircle, Terminal,
+  Book, Science,
 } from '@mui/icons-material';
+
+// ── Download files ─────────────────────────────────────────────────────────────
+const DOWNLOADS = [
+  {
+    icon: <Book />,
+    title: 'Guide de Démonstration',
+    subtitle: 'DEMO-GUIDE.md',
+    desc: '21 modules, ~60 min, narration client complète avec données réelles seed.',
+    href: '/downloads/DEMO-GUIDE.md',
+    color: '#1565C0',
+    size: '35 Ko',
+  },
+  {
+    icon: <Terminal />,
+    title: 'Demo Runner (Script)',
+    subtitle: 'demo-runner.mjs',
+    desc: 'Script Node.js interactif — 90 tests API, 21 sections, pauses [Entrée], code couleur ANSI.',
+    href: '/downloads/demo-runner.mjs',
+    color: '#2E7D32',
+    size: '32 Ko',
+  },
+  {
+    icon: <Science />,
+    title: 'Suite de Tests API',
+    subtitle: 'test-suite.mjs',
+    desc: 'Tests automatisés non-interactifs — 36 tests, validation de tous les endpoints API.',
+    href: '/downloads/test-suite.mjs',
+    color: '#E65100',
+    size: '17 Ko',
+  },
+  {
+    icon: <PlayCircle />,
+    title: 'Formation Client',
+    subtitle: 'Formation-ZenGineering-v3.3.docx',
+    desc: 'Document Word complet — guide de formation client avec captures d\'écran et procédures.',
+    href: '/downloads/Formation-ZenGineering-v3.3.docx',
+    color: '#6A1B9A',
+    size: '68 Ko',
+  },
+];
 
 // ── Feature categories ────────────────────────────────────────────────────────
 const FEATURE_CATEGORIES = [
@@ -295,7 +336,7 @@ export default function ZEngineeringPage() {
       </Stack>
 
       {/* ── Architecture ── */}
-      <Card>
+      <Card sx={{ mb: 4 }}>
         <CardContent>
           <Typography variant="h5" gutterBottom>Vue d'ensemble de l'architecture</Typography>
           <Stack spacing={1}>
@@ -308,6 +349,46 @@ export default function ZEngineeringPage() {
           </Stack>
         </CardContent>
       </Card>
+
+      <Divider sx={{ my: 3 }} />
+
+      {/* ── Téléchargements ── */}
+      <Typography variant="h4" gutterBottom>Ressources & Téléchargements</Typography>
+      <Typography variant="body2" color="text.secondary" mb={2}>
+        Scripts de démonstration, tests API et formation client prêts à l'emploi.
+      </Typography>
+
+      <Grid container spacing={2} mb={2}>
+        {DOWNLOADS.map((dl) => (
+          <Grid key={dl.title} size={{ xs: 12, sm: 6, md: 3 }}>
+            <Card sx={{ height: '100%', borderTop: `3px solid ${dl.color}`, display: 'flex', flexDirection: 'column' }}>
+              <CardContent sx={{ flex: 1 }}>
+                <Stack direction="row" spacing={1.5} alignItems="flex-start" mb={1}>
+                  <Box sx={{ color: dl.color, mt: 0.3, flexShrink: 0 }}>{dl.icon}</Box>
+                  <Box>
+                    <Typography variant="subtitle2" fontWeight="bold">{dl.title}</Typography>
+                    <Typography variant="caption" sx={{ color: dl.color, fontFamily: 'monospace' }}>{dl.subtitle}</Typography>
+                  </Box>
+                </Stack>
+                <Typography variant="caption" color="text.secondary" sx={{ lineHeight: 1.4, display: 'block', mb: 1.5 }}>
+                  {dl.desc}
+                </Typography>
+                <Button
+                  variant="outlined"
+                  size="small"
+                  startIcon={<FileDownload />}
+                  href={dl.href}
+                  download
+                  fullWidth
+                  sx={{ borderColor: dl.color, color: dl.color, '&:hover': { borderColor: dl.color, bgcolor: `${dl.color}10` } }}
+                >
+                  Télécharger · {dl.size}
+                </Button>
+              </CardContent>
+            </Card>
+          </Grid>
+        ))}
+      </Grid>
     </>
   );
 }

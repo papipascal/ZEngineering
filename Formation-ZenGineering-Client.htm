@@ -1,0 +1,1162 @@
+<html xmlns:o="urn:schemas-microsoft-com:office:office"
+      xmlns:w="urn:schemas-microsoft-com:office:word"
+      xmlns="http://www.w3.org/TR/REC-html40">
+<head>
+<meta charset="UTF-8"/>
+<meta name=ProgId content=Word.Document>
+<meta name=Generator content="Microsoft Word 15">
+<meta name=Originator content="Microsoft Word 15">
+<!--[if gte mso 9]>
+<xml><w:WordDocument>
+  <w:View>Print</w:View>
+  <w:Zoom>100</w:Zoom>
+  <w:DoNotOptimizeForBrowser/>
+</w:WordDocument></xml>
+<![endif]-->
+<style>
+  /* === Document global === */
+  body {
+    font-family: "Calibri", sans-serif;
+    font-size: 11pt;
+    color: #1a1a1a;
+    margin: 2.5cm 2.8cm;
+    line-height: 1.5;
+  }
+
+  /* === Sauts de page === */
+  .page-break { page-break-after: always; mso-special-character: line-break; }
+
+  /* === Couverture === */
+  .cover {
+    text-align: center;
+    padding-top: 120px;
+    page-break-after: always;
+  }
+  .cover-logo {
+    font-size: 42pt;
+    font-weight: bold;
+    color: #1565C0;
+    letter-spacing: 4px;
+    margin-bottom: 8px;
+  }
+  .cover-sub {
+    font-size: 16pt;
+    color: #42A5F5;
+    margin-bottom: 60px;
+    letter-spacing: 1px;
+  }
+  .cover-title {
+    font-size: 26pt;
+    font-weight: bold;
+    color: #0D47A1;
+    margin-bottom: 16px;
+    border-top: 3px solid #1565C0;
+    border-bottom: 3px solid #1565C0;
+    padding: 20px 0;
+  }
+  .cover-scenario {
+    font-size: 14pt;
+    color: #455A64;
+    margin-bottom: 8px;
+    font-style: italic;
+  }
+  .cover-client {
+    font-size: 12pt;
+    color: #78909C;
+    margin-bottom: 80px;
+  }
+  .cover-meta {
+    font-size: 10pt;
+    color: #90A4AE;
+    border-top: 1px solid #CFD8DC;
+    padding-top: 20px;
+  }
+
+  /* === Titres === */
+  h1 {
+    font-size: 20pt;
+    font-weight: bold;
+    color: #0D47A1;
+    border-bottom: 2px solid #1565C0;
+    padding-bottom: 6px;
+    margin-top: 32px;
+    margin-bottom: 16px;
+    page-break-after: avoid;
+  }
+  h2 {
+    font-size: 15pt;
+    font-weight: bold;
+    color: #1565C0;
+    margin-top: 28px;
+    margin-bottom: 12px;
+    page-break-after: avoid;
+  }
+  h3 {
+    font-size: 12pt;
+    font-weight: bold;
+    color: #1976D2;
+    margin-top: 20px;
+    margin-bottom: 8px;
+    page-break-after: avoid;
+  }
+
+  /* === Modules === */
+  .module-header {
+    background: #1565C0;
+    color: white;
+    padding: 14px 20px;
+    margin: 30px 0 16px 0;
+    page-break-after: avoid;
+    page-break-inside: avoid;
+  }
+  .module-header .module-num {
+    font-size: 10pt;
+    opacity: 0.8;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+  }
+  .module-header .module-title {
+    font-size: 16pt;
+    font-weight: bold;
+    margin: 4px 0 0 0;
+  }
+  .module-header .module-meta {
+    font-size: 9pt;
+    opacity: 0.7;
+    margin-top: 4px;
+  }
+
+  /* === Badges / étiquettes === */
+  .badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 3px;
+    font-size: 9pt;
+    font-weight: bold;
+    margin-right: 6px;
+  }
+  .badge-blue   { background: #E3F2FD; color: #0D47A1; border: 1px solid #90CAF9; }
+  .badge-green  { background: #E8F5E9; color: #1B5E20; border: 1px solid #A5D6A7; }
+  .badge-orange { background: #FFF3E0; color: #E65100; border: 1px solid #FFCC80; }
+  .badge-red    { background: #FFEBEE; color: #B71C1C; border: 1px solid #EF9A9A; }
+  .badge-purple { background: #F3E5F5; color: #4A148C; border: 1px solid #CE93D8; }
+
+  /* === Objectif box === */
+  .objectif-box {
+    background: #E8F4FD;
+    border-left: 4px solid #1565C0;
+    padding: 10px 16px;
+    margin: 14px 0;
+    font-style: italic;
+    color: #1A237E;
+  }
+
+  /* === Point de vente === */
+  .selling-point {
+    background: #E8F5E9;
+    border-left: 4px solid #2E7D32;
+    padding: 10px 16px;
+    margin: 16px 0;
+    color: #1B5E20;
+  }
+  .selling-point::before {
+    content: "💼 Point de vente — ";
+    font-weight: bold;
+  }
+
+  /* === URL box === */
+  .url-box {
+    background: #F5F5F5;
+    border: 1px solid #BDBDBD;
+    padding: 6px 12px;
+    font-family: "Courier New", monospace;
+    font-size: 10pt;
+    color: #37474F;
+    margin: 8px 0;
+  }
+
+  /* === Étapes numérotées === */
+  ol { margin: 10px 0 10px 24px; padding: 0; }
+  ol li { margin-bottom: 6px; }
+
+  /* === Tables === */
+  table {
+    border-collapse: collapse;
+    width: 100%;
+    margin: 14px 0;
+    font-size: 10pt;
+  }
+  th {
+    background: #1565C0;
+    color: white;
+    padding: 8px 12px;
+    text-align: left;
+    font-weight: bold;
+  }
+  td {
+    padding: 7px 12px;
+    border: 1px solid #BDBDBD;
+    vertical-align: top;
+  }
+  tr:nth-child(even) td { background: #F5F5F5; }
+  tr:nth-child(odd) td  { background: #FFFFFF; }
+
+  /* === Code / API === */
+  .api-block {
+    background: #263238;
+    color: #ECEFF1;
+    padding: 14px 16px;
+    font-family: "Courier New", monospace;
+    font-size: 9pt;
+    margin: 12px 0;
+    line-height: 1.7;
+  }
+  .api-get    { color: #81D4FA; }
+  .api-post   { color: #A5D6A7; }
+  .api-patch  { color: #FFE082; }
+  .api-delete { color: #EF9A9A; }
+
+  /* === Infos / notes === */
+  .info-box {
+    background: #FFF8E1;
+    border-left: 4px solid #F9A825;
+    padding: 10px 16px;
+    margin: 12px 0;
+    font-size: 10pt;
+    color: #5D4037;
+  }
+
+  /* === Architecture box === */
+  .arch-box {
+    background: #37474F;
+    color: #ECEFF1;
+    padding: 16px 20px;
+    font-family: "Courier New", monospace;
+    font-size: 9.5pt;
+    margin: 14px 0;
+    line-height: 1.8;
+  }
+
+  /* === Table des matières === */
+  .toc-section { margin: 6px 0; }
+  .toc-module  { display: flex; justify-content: space-between; padding: 4px 0; border-bottom: 1px dotted #BDBDBD; }
+  .toc-num     { color: #1565C0; font-weight: bold; min-width: 60px; }
+  .toc-name    { flex: 1; }
+  .toc-star    { color: #FDD835; }
+  .toc-time    { color: #90A4AE; min-width: 55px; text-align: right; }
+
+  /* === Récap final === */
+  .recap-table th { background: #0D47A1; }
+  .roi-box {
+    background: linear-gradient(135deg, #0D47A1 0%, #1565C0 100%);
+    color: white;
+    padding: 20px 24px;
+    margin: 20px 0;
+  }
+  .roi-box h3 { color: #90CAF9; font-size: 14pt; margin-bottom: 12px; }
+  .roi-item { margin: 8px 0; font-size: 11pt; }
+
+  /* === En-tête de section === */
+  .section-divider {
+    text-align: center;
+    color: #90A4AE;
+    font-size: 9pt;
+    margin: 40px 0 20px 0;
+    border-top: 1px solid #E0E0E0;
+    padding-top: 8px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+  }
+
+  p { margin: 8px 0; }
+  ul { margin: 8px 0 8px 24px; }
+  ul li { margin-bottom: 4px; }
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════════════════ COUVERTURE -->
+<div class="cover">
+  <div class="cover-logo">ZEN-GINEERING</div>
+  <div class="cover-sub">Engineering Project Management Platform</div>
+
+  <div class="cover-title">Guide de Formation Complet<br/>v3.2</div>
+
+  <div class="cover-scenario">Scénario de démonstration :<br/><strong>Mon Chemical Plant — Unit U_A</strong></div>
+  <div class="cover-client">Client : Alphahexol Industries</div>
+
+  <div style="margin: 40px auto; max-width: 400px;">
+    <table style="border:none; width:100%;">
+      <tr>
+        <td style="border:none; text-align:center; padding:10px;">
+          <div style="font-size:24pt; color:#1565C0;">21</div>
+          <div style="font-size:9pt; color:#90A4AE;">Modules</div>
+        </td>
+        <td style="border:none; text-align:center; padding:10px;">
+          <div style="font-size:24pt; color:#1565C0;">60</div>
+          <div style="font-size:9pt; color:#90A4AE;">Minutes</div>
+        </td>
+        <td style="border:none; text-align:center; padding:10px;">
+          <div style="font-size:24pt; color:#1565C0;">27</div>
+          <div style="font-size:9pt; color:#90A4AE;">Équipements</div>
+        </td>
+        <td style="border:none; text-align:center; padding:10px;">
+          <div style="font-size:24pt; color:#1565C0;">100%</div>
+          <div style="font-size:9pt; color:#90A4AE;">Made in France</div>
+        </td>
+      </tr>
+    </table>
+  </div>
+
+  <div class="cover-meta">
+    Document confidentiel — Zen-gineering v3.2 — Février 2026<br/>
+    Pascal Gorisse · admin@zengineering.local
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════ TABLE DES MATIÈRES -->
+<h1>Table des matières</h1>
+
+<table style="border:none;">
+  <tr><th style="background:#1565C0; color:white;">Module</th><th style="background:#1565C0; color:white;">Titre</th><th style="background:#1565C0; color:white;">Durée</th></tr>
+  <tr><td>—</td><td>Proposition de valeur &amp; architecture</td><td>3 min</td></tr>
+  <tr><td>—</td><td>Prérequis &amp; démarrage rapide</td><td>—</td></tr>
+  <tr><td>—</td><td>Credentials de démonstration</td><td>—</td></tr>
+  <tr><td><strong>01</strong></td><td>Connexion &amp; Navigation</td><td>2 min</td></tr>
+  <tr><td><strong>02</strong></td><td>Tableau de bord</td><td>5 min</td></tr>
+  <tr><td><strong>03</strong></td><td>Gestion de projet &amp; équipe</td><td>5 min</td></tr>
+  <tr><td><strong>04</strong></td><td>Organigramme &amp; Arborescence ⭐</td><td>5 min</td></tr>
+  <tr><td><strong>05</strong></td><td>Liste des équipements ⭐⭐</td><td>8 min</td></tr>
+  <tr><td><strong>06</strong></td><td>Workflows &amp; Approbations ⭐⭐⭐</td><td>10 min</td></tr>
+  <tr><td><strong>07</strong></td><td>Mes Tâches</td><td>3 min</td></tr>
+  <tr><td><strong>08</strong></td><td>Discussions collaboratives</td><td>5 min</td></tr>
+  <tr><td><strong>09</strong></td><td>Registre de documents ⭐⭐</td><td>8 min</td></tr>
+  <tr><td><strong>10</strong></td><td>Upload &amp; partage de documents</td><td>5 min</td></tr>
+  <tr><td><strong>11</strong></td><td>Transmittals ⭐</td><td>5 min</td></tr>
+  <tr><td><strong>12</strong></td><td>Inbox emails &amp; Whitelist ⭐⭐⭐</td><td>8 min</td></tr>
+  <tr><td><strong>13</strong></td><td>Propositions de documents</td><td>5 min</td></tr>
+  <tr><td><strong>14</strong></td><td>Traçabilité AGO / Data Origin ⭐⭐</td><td>5 min</td></tr>
+  <tr><td><strong>15</strong></td><td>Articles de contrat</td><td>4 min</td></tr>
+  <tr><td><strong>16</strong></td><td>Recherche globale</td><td>3 min</td></tr>
+  <tr><td><strong>17</strong></td><td>Audit &amp; Conformité ⭐</td><td>4 min</td></tr>
+  <tr><td><strong>18</strong></td><td>Export CSV</td><td>3 min</td></tr>
+  <tr><td><strong>19</strong></td><td>Notifications temps réel</td><td>2 min</td></tr>
+  <tr><td><strong>20</strong></td><td>Gestion fournisseurs</td><td>3 min</td></tr>
+  <tr><td><strong>21</strong></td><td>Profil utilisateur</td><td>2 min</td></tr>
+  <tr><td>—</td><td><strong>Récapitulatif &amp; Arguments commerciaux</strong></td><td>5 min</td></tr>
+</table>
+
+<p style="color:#90A4AE; font-size:9pt; margin-top:8px;">⭐ = Fonctionnalité différenciante &nbsp;|&nbsp; ⭐⭐⭐ = Clou de la démonstration</p>
+
+<div class="page-break"></div>
+
+<!-- ═══════════════════════════════════════════════════════ PROPOSITION DE VALEUR -->
+<h1>Proposition de valeur &amp; Architecture</h1>
+
+<p><strong>Zen-gineering</strong> est une plateforme de gestion de projets Engineering conçue pour les industries process (chimique, pétrochimique, Oil &amp; Gas). Elle centralise en un seul outil :</p>
+
+<ul>
+  <li>La <strong>liste des équipements</strong> avec données techniques complètes et traçabilité d'origine (AGO)</li>
+  <li>Les <strong>circuits d'approbation</strong> (workflows) sans licence externe — moteur 100% maison</li>
+  <li>La <strong>gestion documentaire</strong> complète avec registre, upload et transmittals</li>
+  <li>La <strong>capture automatique des emails</strong> techniques entrants (IMAP polling)</li>
+  <li>Un <strong>audit trail</strong> total pour la conformité ISO 9001 et réglementaire</li>
+</ul>
+
+<h2>Architecture technique</h2>
+
+<div class="arch-box">
+┌─────────────────────────────────────────────────────────────┐
+│  Frontend React 19 + MUI v7               (port 3001)       │
+├─────────────────────────────────────────────────────────────┤
+│  Backend NestJS + TypeScript              (port 3000)       │
+│  ├── 19 modules API (REST + SSE)                            │
+│  ├── Moteur workflow maison (JSON-configurable)             │
+│  └── IMAP polling automatique (5 min interval)             │
+├──────────────────┬─────────────────┬────────────────────────┤
+│  PostgreSQL       │  MinIO (S3)     │  MailHog (SMTP)        │
+│  (données)        │  (fichiers)     │  (emails sortants)     │
+└──────────────────┴─────────────────┴────────────────────────┘
+</div>
+
+<h2>Prérequis &amp; démarrage rapide</h2>
+
+<div class="api-block">
+# 1. Démarrer les services Docker
+docker compose up -d postgres minio mailhog
+
+# 2. Backend (terminal 1)
+cd backend &amp;&amp; npm run start:dev
+# → http://localhost:3000  |  Swagger: http://localhost:3000/api/docs
+
+# 3. Frontend (terminal 2)
+cd frontend &amp;&amp; npm run dev
+# → http://localhost:3001
+
+# 4. Validation rapide
+node test-suite.mjs   → tous les tests doivent passer ✅
+</div>
+
+<h2>Credentials de démonstration</h2>
+
+<table>
+  <tr>
+    <th>Utilisateur</th><th>Email</th><th>Mot de passe</th><th>Rôle</th>
+  </tr>
+  <tr>
+    <td><strong>Admin Zen</strong></td>
+    <td>admin@zengineering.local</td>
+    <td>Password123!</td>
+    <td>Process Lead (admin)</td>
+  </tr>
+  <tr>
+    <td><strong>Marie Dupont</strong></td>
+    <td>chef.projet@zengineering.local</td>
+    <td>Password123!</td>
+    <td>Chef de Projet (manager)</td>
+  </tr>
+  <tr>
+    <td><strong>Jean Martin</strong></td>
+    <td>ingenieur@zengineering.local</td>
+    <td>Password123!</td>
+    <td>Ingénieur Mécanique (member)</td>
+  </tr>
+</table>
+
+<div class="info-box">
+  <strong>Projet de démo :</strong> Mon Chemical Plant - Unit U_A<br/>
+  <strong>Client :</strong> Alphahexol Industries — john.smith@alphahexol.com<br/>
+  <strong>Email projet :</strong> ua-unit@zengineering.local
+</div>
+
+<div class="page-break"></div>
+
+<!-- ═══════════════════════════════════════════════════════ MODULE 01 -->
+<div class="module-header">
+  <div class="module-num">Module 01</div>
+  <div class="module-title">Connexion &amp; Navigation</div>
+  <div class="module-meta">Durée : 2 min &nbsp;|&nbsp; URL : http://localhost:3001/login</div>
+</div>
+
+<div class="objectif-box">Montrer la sécurité JWT, la sélection de projet et la navigation globale de l'interface.</div>
+
+<h3>Étapes</h3>
+<ol>
+  <li>Ouvrir <strong>http://localhost:3001</strong> → redirection automatique vers <code>/login</code></li>
+  <li>Saisir <strong>admin@zengineering.local</strong> / <strong>Password123!</strong> → cliquer <em>Se connecter</em></li>
+  <li>Observer la redirection vers <code>/select-project</code> — liste des projets accessibles</li>
+  <li>Sélectionner <strong>Mon Chemical Plant - Unit U_A</strong> → accès au tableau de bord</li>
+  <li>Explorer la barre de navigation latérale : tous les 21 modules sont accessibles</li>
+  <li>Se déconnecter (icône en bas à gauche) → retour à <code>/login</code></li>
+</ol>
+
+<h3>Résultat attendu</h3>
+<ul>
+  <li>Token JWT stocké côté client, session persistante entre onglets</li>
+  <li>Menu latéral affiche tous les modules selon les droits de l'utilisateur</li>
+  <li>L'utilisateur voit uniquement les projets dont il est membre</li>
+</ul>
+
+<div class="selling-point">Authentification JWT sécurisée, multi-projets, sans configuration LDAP ou Active Directory complexe.</div>
+
+<!-- ═══════════════════════════════════════════════════════ MODULE 02 -->
+<div class="module-header">
+  <div class="module-num">Module 02</div>
+  <div class="module-title">Tableau de bord</div>
+  <div class="module-meta">Durée : 5 min &nbsp;|&nbsp; URL : http://localhost:3001/</div>
+</div>
+
+<div class="objectif-box">Donner une vue synthétique de l'état du projet en un coup d'œil — KPIs, graphiques, workflows actifs.</div>
+
+<h3>Étapes</h3>
+<ol>
+  <li>Après connexion, observer le tableau de bord <code>/</code></li>
+  <li>Observer les <strong>statistiques projet</strong> : 27 équipements, 1 workflow actif, 3 documents</li>
+  <li>Observer le <strong>graphique de distribution</strong> par catégorie d'équipements (vessels, pumps, heat exchangers…)</li>
+  <li>Observer les <strong>workflows en cours</strong> avec barre de progression et étape courante</li>
+  <li>Tester l'API : <code>GET /api/dashboard/project/:id</code></li>
+</ol>
+
+<div class="selling-point">Vision 360° du projet sans avoir à naviguer dans 10 onglets différents — décision en 30 secondes.</div>
+
+<!-- ═══════════════════════════════════════════════════════ MODULE 03 -->
+<div class="module-header">
+  <div class="module-num">Module 03</div>
+  <div class="module-title">Gestion de projet &amp; équipe</div>
+  <div class="module-meta">Durée : 5 min &nbsp;|&nbsp; URL : http://localhost:3001/project-setup</div>
+</div>
+
+<div class="objectif-box">Montrer la gestion des membres, partenaires et fournisseurs du projet dans une interface unifiée.</div>
+
+<h3>Données du projet de démo</h3>
+<table>
+  <tr><th>Partie prenante</th><th>Nom</th><th>Contact</th><th>Rôle</th></tr>
+  <tr><td>Client</td><td>Alphahexol Industries</td><td>john.smith@alphahexol.com</td><td>Client</td></tr>
+  <tr><td>Partenaire 1</td><td>Licensor Technologies Ltd.</td><td>sarah.chen@licensortech.com</td><td>Licensor</td></tr>
+  <tr><td>Partenaire 2</td><td>EPC Global Engineering</td><td>p.lemoine@epcglobal.fr</td><td>EPC Contractor</td></tr>
+  <tr><td>Fournisseur 1</td><td>SULZER</td><td>—</td><td>Centrifugal pumps</td></tr>
+  <tr><td>Fournisseur 2</td><td>MOUVEX</td><td>—</td><td>Gear pumps (évaluation)</td></tr>
+  <tr><td>Fournisseur 3</td><td>LESER</td><td>—</td><td>Pressure safety valves</td></tr>
+</table>
+
+<h3>Étapes</h3>
+<ol>
+  <li>Naviguer vers <code>/project-setup</code> — fiche projet principale</li>
+  <li>Observer les <strong>informations générales</strong> (nom, client, email projet)</li>
+  <li>Onglet <strong>Membres</strong> : 3 membres avec leurs rôles (owner, manager, member)</li>
+  <li>Onglet <strong>Partenaires</strong> : Licensor + EPC, contacts directs</li>
+  <li>Onglet <strong>Fournisseurs</strong> : SULZER, MOUVEX, LESER avec notes de sélection</li>
+  <li>Démontrer l'ajout d'un nouveau partenaire en temps réel</li>
+</ol>
+
+<div class="selling-point">Toutes les parties prenantes d'un projet en un seul endroit — client, licencier, EPC, fournisseurs — contacts centralisés et partagés avec l'équipe.</div>
+
+<!-- ═══════════════════════════════════════════════════════ MODULE 04 -->
+<div class="module-header">
+  <div class="module-num">Module 04</div>
+  <div class="module-title">Organigramme &amp; Arborescence ⭐</div>
+  <div class="module-meta">Durée : 5 min &nbsp;|&nbsp; URL : http://localhost:3001/organization</div>
+</div>
+
+<div class="objectif-box">Présenter la structure organisationnelle du projet (31 rôles) et l'arborescence documentaire basée sur les standards industriels.</div>
+
+<h3>Assignations clés dans l'organigramme</h3>
+<table>
+  <tr><th>Rôle</th><th>Utilisateur assigné</th></tr>
+  <tr><td>Chef de Projet</td><td>Marie Dupont</td></tr>
+  <tr><td>Process Lead</td><td>Admin Zen</td></tr>
+  <tr><td>Doc Contrôleur</td><td>Jean Martin</td></tr>
+  <tr><td>Engineering Manager</td><td>— (à assigner)</td></tr>
+  <tr><td>Procurement Manager</td><td>— (à assigner)</td></tr>
+</table>
+
+<h3>Arborescence projet (8 niveaux 1)</h3>
+<ul>
+  <li>Cahier des charges (Spécifications techniques, Liste documents, Documents avant-projet)</li>
+  <li>Gestion de projet (Secrétariat, Cost control, Doc control, Planning, Qualité sécurité)</li>
+  <li>Engineering (Process, Layout, Piping, Civil, Équipements, Électricité, Instrumentation)</li>
+  <li>Procurement (Contrats, Vendor list, Appels d'offres, Commandes)</li>
+  <li>Construction, Precom Com, Start-up, Documents généraux</li>
+</ul>
+
+<div class="selling-point">L'organigramme pilote les workflows — les tâches sont auto-assignées selon le rôle (Process Lead, Chef de Projet, etc.) sans configuration manuelle.</div>
+
+<div class="page-break"></div>
+
+<!-- ═══════════════════════════════════════════════════════ MODULE 05 -->
+<div class="module-header">
+  <div class="module-num">Module 05</div>
+  <div class="module-title">Liste des équipements ⭐⭐</div>
+  <div class="module-meta">Durée : 8 min &nbsp;|&nbsp; URL : http://localhost:3001/equipment</div>
+</div>
+
+<div class="objectif-box">Montrer la gestion complète de la liste des équipements avec données techniques, filtres multi-critères et fiches détaillées.</div>
+
+<h3>Extrait de la liste (27 équipements réalistes)</h3>
+<table>
+  <tr><th>Tag</th><th>Service</th><th>Catégorie</th><th>P.opé (barg)</th><th>T.opé (°C)</th></tr>
+  <tr><td><strong>125-VV-601</strong></td><td>Blowdown Drum</td><td>VESSEL</td><td>0</td><td>100</td></tr>
+  <tr><td>125-NF-601 A</td><td>Alphahexol Filter A</td><td>VESSEL</td><td>3</td><td>235</td></tr>
+  <tr><td>125-NF-601 B</td><td>Alphahexol Filter B</td><td>VESSEL</td><td>3</td><td>235</td></tr>
+  <tr><td>125-VV-405</td><td>Waxes Storage Drum</td><td>VESSEL</td><td>3</td><td>200</td></tr>
+  <tr><td><strong>125-HE-601</strong></td><td>Waxes Heater</td><td>HEAT_EXCHANGER</td><td>37</td><td>247</td></tr>
+  <tr><td>125-XA-602</td><td>Waste Heat Recovery</td><td>HEAT_EXCHANGER</td><td>0</td><td>950</td></tr>
+  <tr><td><strong>125-PR-601 A</strong></td><td>Feed Loop Pump A</td><td>ROTATING_MACHINE</td><td>2.9</td><td>235</td></tr>
+  <tr><td>125-PR-601 B</td><td>Feed Loop Pump B</td><td>ROTATING_MACHINE</td><td>2.9</td><td>235</td></tr>
+  <tr><td>125-PR-602 A/B</td><td>Recirculation Pump A/B</td><td>ROTATING_MACHINE</td><td>0.5</td><td>70</td></tr>
+</table>
+
+<h3>Fiche détaillée — 125-PR-601 A</h3>
+<table>
+  <tr><th>Paramètre</th><th>Valeur</th></tr>
+  <tr><td>Service</td><td>Alphahexol Spent Catalyst and Waxes Feed Loop Pump A</td></tr>
+  <tr><td>Type</td><td>Gear pump, Reciprocating</td></tr>
+  <tr><td>Matériaux</td><td>Casing: SS, Gear: SS</td></tr>
+  <tr><td>Débit</td><td>2.0 m³/h</td></tr>
+  <tr><td>Puissance</td><td>2.1 kW, entraînement électrique</td></tr>
+  <tr><td>Pression service / design</td><td>2.9 / 15.1 barg</td></tr>
+  <tr><td>Température service</td><td>235°C</td></tr>
+</table>
+
+<h3>Étapes de démo</h3>
+<ol>
+  <li>Naviguer vers <code>/equipment</code> — liste des 27 équipements</li>
+  <li>Filtrer par catégorie <strong>ROTATING_MACHINE</strong> → pompes et compresseurs</li>
+  <li>Rechercher <strong>"pump"</strong> dans la barre de recherche</li>
+  <li>Ouvrir la fiche <strong>125-PR-601 A</strong> — données techniques complètes</li>
+  <li>Onglet <strong>Discussions</strong> — discussion "Feed Loop Pump vendor selection" liée</li>
+  <li>Onglet <strong>Data Origin</strong> — traçabilité AGO des valeurs (voir Module 14)</li>
+</ol>
+
+<div class="selling-point">La liste des équipements est le cœur du projet EPC — toutes les données techniques en un clic, avec historique de modification et traçabilité complète de chaque valeur.</div>
+
+<!-- ═══════════════════════════════════════════════════════ MODULE 06 -->
+<div class="module-header">
+  <div class="module-num">Module 06</div>
+  <div class="module-title">Workflows &amp; Approbations ⭐⭐⭐</div>
+  <div class="module-meta">Durée : 10 min &nbsp;|&nbsp; URL : http://localhost:3001/tasks — CLOU DE LA DÉMONSTRATION</div>
+</div>
+
+<div class="objectif-box">Démontrer le moteur de workflow maison — le différenciateur clé face aux solutions concurrentes utilisant Camunda ou SharePoint.</div>
+
+<h3>3 circuits d'approbation disponibles</h3>
+<table>
+  <tr><th>Nom</th><th>Étapes</th><th>Usage type</th></tr>
+  <tr>
+    <td><strong>Simple Approval</strong></td>
+    <td>Execution → Validation Lead → Approbation CDP</td>
+    <td>Validation équipement, décision technique</td>
+  </tr>
+  <tr>
+    <td><strong>Validation de document</strong></td>
+    <td>Soumission → Lead → CDP → Revue technique → Approbation finale</td>
+    <td>Documents techniques (PFD, P&amp;ID, datasheets)</td>
+  </tr>
+  <tr>
+    <td><strong>Approbation achat</strong></td>
+    <td>Demande → Lead → CDP → Budget → Direction → Finalisation</td>
+    <td>Commandes fournisseurs, achats</td>
+  </tr>
+</table>
+
+<h3>Instance active — Scénario de démo</h3>
+<div class="info-box">
+  <strong>Sujet :</strong> "Review pump 125-PR-601 datasheet"<br/>
+  <strong>Circuit :</strong> Simple Approval (3 étapes)<br/>
+  <strong>Étape actuelle :</strong> Execution (assigné à Jean Martin)<br/>
+  <strong>Étape suivante :</strong> Validation Lead Discipline (Admin Zen)<br/>
+  <strong>Étape finale :</strong> Approbation Chef de Projet (Marie Dupont)
+</div>
+
+<h3>Étapes de démo</h3>
+<ol>
+  <li>Se connecter en tant que <strong>Jean Martin</strong> (ingenieur@zengineering.local)</li>
+  <li>Naviguer vers <code>/tasks</code> → la tâche "Execution — Review pump 125-PR-601 datasheet" est active</li>
+  <li>Expliquer : <em>"Jean Martin a été auto-assigné car il est le member du projet. L'organigramme pilote l'attribution."</em></li>
+  <li>Cliquer <strong>Complete / Marquer comme fait</strong> → transition automatique</li>
+  <li>Se reconnecter en tant qu'<strong>Admin Zen</strong> → la tâche "Validation Lead Discipline" apparaît dans ses tâches</li>
+  <li>Via Swagger (<code>GET /api/workflows/definitions</code>) : montrer les 3 templates JSON configurables</li>
+</ol>
+
+<h3>Endpoints API Workflows</h3>
+<div class="api-block">
+<span class="api-get">GET</span>  /api/workflows/definitions          → 3 templates JSON configurables
+<span class="api-get">GET</span>  /api/workflows/instances?projectId  → instances du projet
+<span class="api-post">POST</span> /api/workflows/instances            → démarrer un nouveau circuit
+<span class="api-post">POST</span> /api/workflows/instances/:id/advance → avancer l'étape courante
+<span class="api-get">GET</span>  /api/workflows/my-tasks             → tâches de l'utilisateur connecté
+</div>
+
+<div class="selling-point">Moteur workflow 100% maison, configurable en JSON, sans licence Camunda (économie de 20 000€/an+). Les circuits s'adaptent à chaque discipline engineering en 5 minutes.</div>
+
+<div class="page-break"></div>
+
+<!-- ═══════════════════════════════════════════════════════ MODULE 07 -->
+<div class="module-header">
+  <div class="module-num">Module 07</div>
+  <div class="module-title">Mes Tâches</div>
+  <div class="module-meta">Durée : 3 min &nbsp;|&nbsp; URL : http://localhost:3001/tasks</div>
+</div>
+
+<div class="objectif-box">Vue personnelle des tâches assignées à l'utilisateur connecté — chaque membre gère son propre tableau de bord.</div>
+
+<h3>Étapes</h3>
+<ol>
+  <li>Connecté en tant que <strong>Jean Martin</strong> → tâche "Execution" en statut <strong>active</strong></li>
+  <li>Connecté en tant que <strong>Marie Dupont</strong> → tâches en attente (pending)</li>
+  <li>Filtre par statut : active / pending / completed</li>
+</ol>
+
+<div class="selling-point">Chaque membre de l'équipe a son tableau de bord personnel — fini les oublis de validation, les emails "tu as validé ?" disparaissent.</div>
+
+<!-- ═══════════════════════════════════════════════════════ MODULE 08 -->
+<div class="module-header">
+  <div class="module-num">Module 08</div>
+  <div class="module-title">Discussions collaboratives</div>
+  <div class="module-meta">Durée : 5 min &nbsp;|&nbsp; URL : http://localhost:3001/discussions</div>
+</div>
+
+<div class="objectif-box">Montrer la collaboration contextualisée — chaque discussion est liée à un équipement ou au projet, l'historique des décisions est permanent.</div>
+
+<h3>Discussions pré-existantes dans le scénario</h3>
+<table>
+  <tr><th>Titre</th><th>Lié à</th><th>Auteur</th><th>Commentaires</th></tr>
+  <tr>
+    <td>Blowdown Drum material selection</td>
+    <td>125-VV-601</td>
+    <td>Marie Dupont</td>
+    <td>2 (Jean Martin + Admin Zen)</td>
+  </tr>
+  <tr>
+    <td>Feed Loop Pump vendor selection</td>
+    <td>125-PR-601 A</td>
+    <td>Jean Martin</td>
+    <td>1 (Marie Dupont)</td>
+  </tr>
+  <tr>
+    <td>Weekly progress update - Week 7</td>
+    <td>Projet général</td>
+    <td>Marie Dupont</td>
+    <td>0</td>
+  </tr>
+</table>
+
+<h3>Extrait de la discussion "Blowdown Drum material selection"</h3>
+<div class="info-box">
+  <strong>Marie Dupont :</strong> "Should we consider stainless steel for the blowdown drum given the corrosive service conditions? The current specification calls for CS + 3mm CA but some project members have concerns…"<br/><br/>
+  <strong>Jean Martin :</strong> "I recommend we stick with CS + 3mm CA. The operating conditions (0 barg, 100°C) are mild. SS would be over-engineered for this service."<br/><br/>
+  <strong>Admin Zen :</strong> "Agreed with Jean. The vendor LESER also confirmed that CS is standard for this application. Let us proceed with the original spec."
+</div>
+
+<div class="selling-point">Les discussions sont contextualisées par équipement — l'historique des décisions techniques reste permanent dans le projet et est consultable lors des audits.</div>
+
+<!-- ═══════════════════════════════════════════════════════ MODULE 09 -->
+<div class="module-header">
+  <div class="module-num">Module 09</div>
+  <div class="module-title">Registre de documents ⭐⭐</div>
+  <div class="module-meta">Durée : 8 min &nbsp;|&nbsp; URL : http://localhost:3001/document-register</div>
+</div>
+
+<div class="objectif-box">Montrer le registre officiel des documents techniques avec suivi de révision et cycle de vie complet.</div>
+
+<h3>Documents dans le registre de démo</h3>
+<table>
+  <tr><th>N° Document</th><th>Titre</th><th>Discipline</th><th>Révision</th><th>Statut</th></tr>
+  <tr>
+    <td><strong>ZG-125-PRC-001</strong></td>
+    <td>Process Flow Diagram - Unit U_A</td>
+    <td>PROCESS</td>
+    <td>B</td>
+    <td><span class="badge badge-green">APPROVED</span></td>
+  </tr>
+  <tr>
+    <td><strong>ZG-125-PRC-002</strong></td>
+    <td>P&amp;ID - Catalyst Filtration Section</td>
+    <td>PROCESS</td>
+    <td>A</td>
+    <td><span class="badge badge-orange">FOR_REVIEW</span></td>
+  </tr>
+  <tr>
+    <td><strong>ZG-125-MEC-001</strong></td>
+    <td>Datasheet - Blowdown Drum 125-VV-601</td>
+    <td>MECHANICAL</td>
+    <td>A</td>
+    <td><span class="badge badge-blue">DRAFT</span></td>
+  </tr>
+</table>
+
+<h3>Cycle de vie d'un document</h3>
+<div class="arch-box">
+DRAFT ──→ FOR_REVIEW ──→ APPROVED
+                    └──→ REJECTED ──→ (révision)
+                    └──→ CANCELLED
+</div>
+
+<h3>Étapes de démo</h3>
+<ol>
+  <li>Naviguer vers <code>/document-register</code> — 3 documents affichés</li>
+  <li>Observer les statuts colorés (APPROVED vert, FOR_REVIEW orange, DRAFT bleu)</li>
+  <li>Créer un nouveau document : <strong>ZG-125-MEC-002 — Datasheet Feed Loop Pump 125-PR-601</strong></li>
+  <li>Statut : DRAFT, Discipline : MECHANICAL, Révision : A</li>
+  <li>Passer ZG-125-MEC-001 de DRAFT → FOR_REVIEW (un clic)</li>
+</ol>
+
+<div class="selling-point">Le registre de documents est la colonne vertébrale du Doc Control — conforme aux standards industriels IEC/ISO avec traçabilité complète des révisions.</div>
+
+<div class="page-break"></div>
+
+<!-- ═══════════════════════════════════════════════════════ MODULE 10 -->
+<div class="module-header">
+  <div class="module-num">Module 10</div>
+  <div class="module-title">Upload &amp; partage de documents</div>
+  <div class="module-meta">Durée : 5 min &nbsp;|&nbsp; URL : http://localhost:3001/documents</div>
+</div>
+
+<div class="objectif-box">Montrer le système de fichiers MinIO S3 avec upload sécurisé et partage par presigned URL temporaire.</div>
+
+<h3>Fonctionnement</h3>
+<ol>
+  <li>Naviguer vers <code>/documents</code></li>
+  <li>Uploader un fichier PDF (ex. une datasheet) via le bouton <strong>Upload</strong></li>
+  <li>Le fichier est stocké dans <strong>MinIO</strong> (S3-compatible, on-premise)</li>
+  <li>Métadonnées enregistrées : nom, taille, type MIME, uploader, date</li>
+  <li>Télécharger → URL présignée générée, expire après 1h (sécurité)</li>
+</ol>
+
+<h3>Endpoints API</h3>
+<div class="api-block">
+<span class="api-post">POST</span>  /api/documents/upload          → multipart upload → stockage MinIO
+<span class="api-get">GET</span>   /api/documents/:id/download    → presigned URL temporaire S3
+<span class="api-get">GET</span>   /api/documents?projectId=xxx   → liste des fichiers du projet
+<span class="api-delete">DELETE</span> /api/documents/:id            → suppression MinIO + métadonnées
+</div>
+
+<div class="selling-point">Stockage cloud-native S3 (MinIO) — déployable on-premise sur Synology NAS, AWS S3, ou Azure Blob Storage sans changer une ligne de code.</div>
+
+<!-- ═══════════════════════════════════════════════════════ MODULE 11 -->
+<div class="module-header">
+  <div class="module-num">Module 11</div>
+  <div class="module-title">Transmittals ⭐</div>
+  <div class="module-meta">Durée : 5 min &nbsp;|&nbsp; URL : http://localhost:3001/transmittals</div>
+</div>
+
+<div class="objectif-box">Montrer la création et le suivi de transmittals — envois officiels de documents à des tiers (client, licencier, EPC).</div>
+
+<h3>Transmittal de démo — MONCHE-TR-001</h3>
+<table>
+  <tr><th>Champ</th><th>Valeur</th></tr>
+  <tr><td>Numéro</td><td>MONCHE-TR-001</td></tr>
+  <tr><td>Sujet</td><td>Process Flow Diagrams - For Review</td></tr>
+  <tr><td>Destinataire</td><td>Dr. Sarah Chen — sarah.chen@licensortech.com (Licensor)</td></tr>
+  <tr><td>Objet</td><td>FOR_REVIEW</td></tr>
+  <tr><td>Statut</td><td>SENT</td></tr>
+  <tr><td>Date d'envoi</td><td>10 février 2026</td></tr>
+  <tr><td>Documents</td><td>ZG-125-PRC-001 (Rev B) + ZG-125-PRC-002 (Rev A)</td></tr>
+</table>
+
+<h3>Lettre de couverture</h3>
+<div class="info-box">
+  "Please find attached the process flow diagrams for Unit U_A. Kindly review and provide your comments within 2 weeks."
+</div>
+
+<h3>Étapes de démo</h3>
+<ol>
+  <li>Naviguer vers <code>/transmittals</code> → MONCHE-TR-001 visible</li>
+  <li>Ouvrir le transmittal → lettre de couverture + documents attachés</li>
+  <li>Créer un nouveau transmittal (optionnel) vers Pierre Lemoine / EPC Global Engineering</li>
+</ol>
+
+<div class="selling-point">Les transmittals formalisent les envois officiels à clients/partenaires/licenciers — traçabilité complète de qui a reçu quoi et quand.</div>
+
+<!-- ═══════════════════════════════════════════════════════ MODULE 12 -->
+<div class="module-header">
+  <div class="module-num">Module 12</div>
+  <div class="module-title">Inbox emails &amp; Whitelist ⭐⭐⭐</div>
+  <div class="module-meta">Durée : 8 min &nbsp;|&nbsp; URL : http://localhost:3001/incoming-emails</div>
+</div>
+
+<div class="objectif-box">Démontrer la capture automatique des emails techniques entrants, le système de whitelist et la génération automatique de propositions de documents.</div>
+
+<h3>Fonctionnement du IMAP Polling</h3>
+<div class="arch-box">
+IMAP Server (Outlook/Gmail)
+       │ polling toutes les 5 minutes
+       ▼
+Backend NestJS (imapflow)
+       │ filtre whitelist
+       ▼
+Email accepté → Projet associé
+       │ pièce jointe détectée
+       ▼
+Proposition de document (PENDING)
+       │ validation humaine
+       ▼
+Registre de documents
+</div>
+
+<h3>Whitelist — Expéditeurs autorisés</h3>
+<table>
+  <tr><th>Type</th><th>Valeur</th><th>Label</th><th>Action</th></tr>
+  <tr><td>Domaine</td><td>@licensortech.com</td><td>Licensor Technologies</td><td>Auto-accepté</td></tr>
+  <tr><td>Email</td><td>p.lemoine@epcglobal.fr</td><td>EPC Lead</td><td>Auto-accepté</td></tr>
+  <tr><td>Email</td><td>john.smith@alphahexol.com</td><td>Client</td><td>Auto-accepté</td></tr>
+</table>
+
+<h3>Étapes de démo</h3>
+<ol>
+  <li>Naviguer vers <code>/incoming-emails</code></li>
+  <li>Vérifier le <strong>statut IMAP</strong> en haut de page (configuré / erreur)</li>
+  <li>Onglet <strong>Whitelist</strong> : ajouter le domaine <code>licensortech.com</code></li>
+  <li>Ajouter l'email spécifique <code>p.lemoine@epcglobal.fr</code></li>
+  <li>Montrer les <strong>règles de routage</strong> : mot-clé "U_A" → projet Mon Chemical Plant</li>
+  <li>Expliquer : <em>"Un email de sarah.chen@licensortech.com avec 'U_A' dans le sujet est automatiquement rattaché au projet et classifié."</em></li>
+</ol>
+
+<div class="selling-point">Aucun email technique ne se perd — capture IMAP automatique, classification intelligente, propositions de document auto-générées. Zéro saisie manuelle, zéro risque de perte d'information critique.</div>
+
+<div class="page-break"></div>
+
+<!-- ═══════════════════════════════════════════════════════ MODULE 13 -->
+<div class="module-header">
+  <div class="module-num">Module 13</div>
+  <div class="module-title">Propositions de documents</div>
+  <div class="module-meta">Durée : 5 min &nbsp;|&nbsp; URL : http://localhost:3001/document-proposals</div>
+</div>
+
+<div class="objectif-box">Montrer comment les emails entrants génèrent automatiquement des propositions d'ajout au registre de documents — validation humaine requise avant intégration.</div>
+
+<h3>Flux automatisé</h3>
+<ol>
+  <li>Email reçu de source whitelist avec pièce jointe (PDF, Excel…)</li>
+  <li>Zen-gineering crée une proposition en statut <strong>PENDING</strong></li>
+  <li>Le Doc Controller reçoit une notification → consulte la proposition</li>
+  <li><strong>Accepter</strong> → document créé dans le registre avec métadonnées extraites</li>
+  <li><strong>Rejeter</strong> → proposition archivée avec motif</li>
+</ol>
+
+<div class="selling-point">Le Document Control est semi-automatisé — les emails techniques alimentent directement le registre sans re-saisie manuelle. Gain estimé : -40% du temps Doc Control.</div>
+
+<!-- ═══════════════════════════════════════════════════════ MODULE 14 -->
+<div class="module-header">
+  <div class="module-num">Module 14</div>
+  <div class="module-title">Traçabilité AGO / Data Origin ⭐⭐</div>
+  <div class="module-meta">Durée : 5 min &nbsp;|&nbsp; URL : http://localhost:3001/ago-report</div>
+</div>
+
+<div class="objectif-box">Montrer la traçabilité d'origine des données techniques (AGO = Approved &amp; Guaranteed Origin) — concept clé pour conformité HAZOP, ATEX et audits réglementaires.</div>
+
+<h3>Qu'est-ce que l'AGO ?</h3>
+<p>En Engineering, chaque valeur technique doit être traçable jusqu'à sa source approuvée :</p>
+<table>
+  <tr><th>Donnée</th><th>Valeur</th><th>Source</th><th>Statut</th></tr>
+  <tr><td>Pression design 125-VV-601</td><td>3.5 barg</td><td>P&amp;ID Rev A</td><td>✅ Fresh</td></tr>
+  <tr><td>Température design</td><td>120°C</td><td>Process datasheet</td><td>✅ Fresh</td></tr>
+  <tr><td>Matériau cuve</td><td>CS + 3mm CA</td><td>Engineering Spec</td><td>✅ Fresh</td></tr>
+  <tr><td>Débit pompe 125-PR-601 A</td><td>2.0 m³/h</td><td>Datasheet MOUVEX</td><td>⚠️ Stale</td></tr>
+</table>
+
+<h3>Étapes de démo</h3>
+<ol>
+  <li>Naviguer vers <code>/ago-report</code> — vue globale des données par équipement</li>
+  <li>Sur la fiche 125-VV-601, onglet <strong>Data Origin</strong></li>
+  <li>Observer la <strong>vérification de fraîcheur</strong> (fresh / stale) — rouge si source changée</li>
+  <li>Cliquer sur une valeur → <strong>historique complet</strong> des révisions avec auteur et date</li>
+</ol>
+
+<div class="selling-point">Conformité réglementaire assurée — chaque valeur technique est traçable jusqu'à sa source approuvée. Inestimable pour les audits HAZOP, ATEX et due diligence.</div>
+
+<!-- ═══════════════════════════════════════════════════════ MODULE 15 -->
+<div class="module-header">
+  <div class="module-num">Module 15</div>
+  <div class="module-title">Articles de contrat</div>
+  <div class="module-meta">Durée : 4 min &nbsp;|&nbsp; URL : http://localhost:3001/contract-requirements</div>
+</div>
+
+<div class="objectif-box">Gérer les exigences contractuelles et leur suivi — requirements du contrat avec change log horodaté.</div>
+
+<h3>Étapes</h3>
+<ol>
+  <li>Naviguer vers <code>/contract-requirements</code> — liste des exigences contractuelles</li>
+  <li>Statuts : OPEN / IN_PROGRESS / CLOSED</li>
+  <li>Naviguer vers <code>/contract-change-log</code> — journal des modifications contractuelles</li>
+  <li>Import Excel disponible pour charger les exigences d'un contrat existant</li>
+</ol>
+
+<div class="selling-point">Les exigences contractuelles sont trackées directement dans l'outil — fini les Excel perdus dans les boîtes mail, toutes les modifications sont datées et attribuées.</div>
+
+<!-- ═══════════════════════════════════════════════════════ MODULE 16 -->
+<div class="module-header">
+  <div class="module-num">Module 16</div>
+  <div class="module-title">Recherche globale</div>
+  <div class="module-meta">Durée : 3 min &nbsp;|&nbsp; URL : http://localhost:3001/search</div>
+</div>
+
+<div class="objectif-box">Montrer la recherche full-text multi-entités — un seul endroit pour retrouver n'importe quelle information du projet.</div>
+
+<h3>Étapes de démo</h3>
+<ol>
+  <li>Naviguer vers <code>/search</code></li>
+  <li>Taper <strong>"pump"</strong> → résultats multi-entités :</li>
+  <ul>
+    <li>Équipements : 125-PR-601 A/B, 125-PR-602 A/B…</li>
+    <li>Discussions : "Feed Loop Pump vendor selection"</li>
+    <li>Documents : "Datasheet - Feed Loop Pump"</li>
+  </ul>
+  <li>Taper <strong>"125-VV"</strong> → filtre sur les vessels</li>
+  <li><strong>Sauvegarder</strong> la recherche "pump" → mémorisée pour accès rapide</li>
+  <li><strong>Épingler</strong> la recherche dans le panneau gauche</li>
+</ol>
+
+<div class="selling-point">Retrouver n'importe quelle information en 2 secondes — équipement, document, discussion — quelle que soit la taille du projet.</div>
+
+<div class="page-break"></div>
+
+<!-- ═══════════════════════════════════════════════════════ MODULE 17 -->
+<div class="module-header">
+  <div class="module-num">Module 17</div>
+  <div class="module-title">Audit &amp; Conformité ⭐</div>
+  <div class="module-meta">Durée : 4 min &nbsp;|&nbsp; URL : http://localhost:3001/audit</div>
+</div>
+
+<div class="objectif-box">Montrer le journal d'audit complet — toutes les actions sont loguées automatiquement pour la conformité ISO 9001 et les audits réglementaires.</div>
+
+<h3>Ce qui est tracé automatiquement</h3>
+<ul>
+  <li>Création / modification / suppression de tout objet (équipement, document, discussion…)</li>
+  <li>Champ modifié + ancienne valeur + nouvelle valeur</li>
+  <li>Utilisateur responsable + horodatage précis</li>
+  <li>Avancement des workflows (chaque transition d'étape)</li>
+</ul>
+
+<h3>Étapes de démo</h3>
+<ol>
+  <li>Naviguer vers <code>/audit</code></li>
+  <li>Filtrer par <strong>entité Equipment</strong> → toutes les modifications d'équipements</li>
+  <li>Filtrer par <strong>utilisateur</strong> : Marie Dupont</li>
+  <li>Filtrer par <strong>période</strong> : 7 derniers jours</li>
+  <li>Export CSV immédiat → fichier audit.csv pour rapport externe</li>
+</ol>
+
+<div class="selling-point">Audit trail ISO-conforme sans aucune configuration — chaque modification est automatiquement enregistrée, impossible à effacer, exportable pour audit externe en 1 clic.</div>
+
+<!-- ═══════════════════════════════════════════════════════ MODULE 18 -->
+<div class="module-header">
+  <div class="module-num">Module 18</div>
+  <div class="module-title">Export CSV</div>
+  <div class="module-meta">Durée : 3 min</div>
+</div>
+
+<div class="objectif-box">Montrer les 6 types d'export disponibles pour reporting client, audit externe et analyse offline.</div>
+
+<h3>Exports disponibles</h3>
+<table>
+  <tr><th>Endpoint</th><th>Contenu</th></tr>
+  <tr><td><code>/api/export/project/:id/equipment</code></td><td>Liste complète des équipements (27 lignes + données techniques)</td></tr>
+  <tr><td><code>/api/export/project/:id/document-register</code></td><td>Registre de documents avec statuts et révisions</td></tr>
+  <tr><td><code>/api/export/project/:id/audit</code></td><td>Journal d'audit complet</td></tr>
+  <tr><td><code>/api/export/project/:id/discussions</code></td><td>Toutes les discussions et commentaires</td></tr>
+  <tr><td><code>/api/export/project/:id/transmittals</code></td><td>Transmittals avec détails</td></tr>
+  <tr><td><code>/api/export/project/:id/workflows</code></td><td>Historique des workflows et transitions</td></tr>
+</table>
+
+<div class="selling-point">Export instantané vers Excel pour les rapports clients, audits et analyses offline — aucun accès base de données requis, disponible pour tout membre du projet.</div>
+
+<!-- ═══════════════════════════════════════════════════════ MODULE 19 -->
+<div class="module-header">
+  <div class="module-num">Module 19</div>
+  <div class="module-title">Notifications temps réel</div>
+  <div class="module-meta">Durée : 2 min</div>
+</div>
+
+<div class="objectif-box">Démontrer les notifications push en temps réel via SSE (Server-Sent Events) — collaboration instantanée sans rechargement de page.</div>
+
+<h3>Comment ça fonctionne</h3>
+<p>Le navigateur maintient une connexion persistante (<code>text/event-stream</code>) vers le backend. Dès qu'une action se produit (workflow avancé, document créé, commentaire ajouté), toute l'équipe connectée reçoit la notification instantanément.</p>
+
+<h3>Démonstration</h3>
+<ol>
+  <li>Ouvrir DevTools → onglet <strong>Network</strong> → filtrer <strong>EventStream</strong></li>
+  <li>Observer la connexion SSE persistante vers <code>GET /api/notifications/stream</code></li>
+  <li>Dans un autre onglet : avancer un workflow ou modifier un équipement</li>
+  <li>Observer l'arrivée en temps réel de la notification dans le stream</li>
+  <li>L'icône cloche se met à jour sans rechargement de page</li>
+</ol>
+
+<div class="selling-point">Collaboration temps réel — toute l'équipe est notifiée instantanément des approbations, modifications et nouveaux documents. Pas de polling, pas de rechargement.</div>
+
+<!-- ═══════════════════════════════════════════════════════ MODULE 20 -->
+<div class="module-header">
+  <div class="module-num">Module 20</div>
+  <div class="module-title">Gestion fournisseurs</div>
+  <div class="module-meta">Durée : 3 min &nbsp;|&nbsp; URL : http://localhost:3001/vendors</div>
+</div>
+
+<div class="objectif-box">Présenter la Vendor List complète avec spécialités et rattachement projet — base de données fournisseurs industrielle.</div>
+
+<h3>Fournisseurs sélectionnés pour le projet</h3>
+<table>
+  <tr><th>Fournisseur</th><th>Pays</th><th>Spécialité</th><th>Note projet</th></tr>
+  <tr><td>SULZER</td><td>France</td><td>Centrifugal Pumps</td><td>Selected for centrifugal pumps</td></tr>
+  <tr><td>MOUVEX</td><td>France</td><td>Reciprocating Pumps</td><td>Under evaluation for gear pumps</td></tr>
+  <tr><td>LESER</td><td>France</td><td>Pressure Safety Valves</td><td>Selected for PSV</td></tr>
+</table>
+
+<h3>Étapes de démo</h3>
+<ol>
+  <li>Naviguer vers <code>/vendors</code></li>
+  <li>Observer la liste globale 100+ fournisseurs industriels</li>
+  <li>Filtrer par spécialité <strong>"Centrifugal Pumps"</strong> → SULZER, ENSIVAL MORET, FLOWSERVE, KSB…</li>
+  <li>Observer les <strong>fournisseurs du projet</strong> (3 sélectionnés avec notes)</li>
+</ol>
+
+<div class="selling-point">La Vendor List approuvée est centralisée et partagée entre projets — respecte les standards de qualification fournisseurs ISO 9001 et facilite les appels d'offres.</div>
+
+<!-- ═══════════════════════════════════════════════════════ MODULE 21 -->
+<div class="module-header">
+  <div class="module-num">Module 21</div>
+  <div class="module-title">Profil utilisateur</div>
+  <div class="module-meta">Durée : 2 min &nbsp;|&nbsp; URL : http://localhost:3001/profile</div>
+</div>
+
+<div class="objectif-box">Gestion du profil personnel — mise à jour des informations et changement de mot de passe sécurisé.</div>
+
+<h3>Étapes</h3>
+<ol>
+  <li>Naviguer vers <code>/profile</code></li>
+  <li>Observer : nom, email, rôle, discipline</li>
+  <li>Modifier le <strong>nom</strong> → sauvegarde instantanée</li>
+  <li>Tenter un changement de mot de passe avec un <strong>mauvais mot de passe actuel</strong> → erreur 401</li>
+  <li>Corriger avec <code>Password123!</code> → changement accepté</li>
+</ol>
+
+<div class="selling-point">Chaque utilisateur gère son profil en autonomie — sécurité renforcée avec validation de l'ancien mot de passe avant tout changement.</div>
+
+<div class="page-break"></div>
+
+<!-- ═══════════════════════════════════════════════════════ RÉCAPITULATIF -->
+<h1>Récapitulatif &amp; Arguments commerciaux</h1>
+
+<h2>Ce que vous venez de voir</h2>
+<table class="recap-table">
+  <tr>
+    <th>Domaine</th><th>Fonctionnalité</th><th>Valeur métier</th>
+  </tr>
+  <tr><td>🔧 <strong>Ingénierie</strong></td><td>Liste équipements 27 items + fiches techniques</td><td>Référentiel technique central et partagé</td></tr>
+  <tr><td>🔄 <strong>Workflow</strong></td><td>3 circuits configurables en JSON</td><td>Zéro licence, 100% adaptable en 5 min</td></tr>
+  <tr><td>📄 <strong>Documents</strong></td><td>Registre + upload MinIO + transmittals</td><td>Traçabilité documentaire complète</td></tr>
+  <tr><td>📧 <strong>Emails</strong></td><td>IMAP polling + whitelist + propositions auto</td><td>Zéro email perdu, zéro saisie manuelle</td></tr>
+  <tr><td>🔍 <strong>Data Origin</strong></td><td>AGO par champ, staleness check</td><td>Conformité HAZOP/ATEX en continu</td></tr>
+  <tr><td>📊 <strong>Reporting</strong></td><td>Dashboard + audit trail + 6 exports CSV</td><td>Audit externe en 1 clic</td></tr>
+  <tr><td>⚡ <strong>Temps réel</strong></td><td>SSE notifications push</td><td>Équipe synchronisée instantanément</td></tr>
+  <tr><td>👥 <strong>Organisation</strong></td><td>Organigramme 31 rôles + arborescence</td><td>Auto-assignation des tâches workflows</td></tr>
+</table>
+
+<h2>Les 5 arguments commerciaux clés</h2>
+
+<h3>1 — Moteur workflow maison — Zéro licence</h3>
+<p>Camunda BPM coûte <strong>20 000€+/an</strong> en licence enterprise. Zen-gineering inclut un moteur équivalent, configurable en JSON, sans coût additionnel. Les circuits d'approbation s'adaptent à chaque discipline engineering en 5 minutes — sans intervention développeur.</p>
+
+<h3>2 — IMAP intégré — Capture automatique des emails</h3>
+<p>Les emails techniques de licenciers, clients et EPC sont capturés automatiquement, filtrés par whitelist, classifiés et convertis en propositions de documents. <strong>Zéro risque de perte d'information</strong>, zéro double saisie, conformité au standard de traçabilité des communications.</p>
+
+<h3>3 — Traçabilité AGO — Conformité réglementaire</h3>
+<p>Chaque valeur technique (pression, température, matériau…) est traçable jusqu'à sa source approuvée. Standard incontournable pour les projets soumis à <strong>HAZOP, ATEX, PED</strong> et audits réglementaires. Staleness check automatique si la source évolue.</p>
+
+<h3>4 — Audit trail complet — Impossible à falsifier</h3>
+<p>Toute modification est automatiquement loguée avec utilisateur, horodatage, ancienne et nouvelle valeur. Conformité <strong>ISO 9001</strong> et réglementaire out-of-the-box. Export en 1 clic pour audit externe — 0h de préparation.</p>
+
+<h3>5 — Architecture cloud-native — Déploiement flexible</h3>
+<p>MinIO S3, SSE temps réel, JWT, Docker, NestJS. Déployable sur <strong>Synology NAS</strong> (sans Cloud), serveur dédié, ou <strong>AWS S3 / Azure Blob</strong> sans adaptation. Données hébergées en interne — conformité RGPD et souveraineté des données garanties.</p>
+
+<h2>Tableau ROI estimé</h2>
+<table>
+  <tr><th>Poste</th><th>Économie / Gain</th></tr>
+  <tr><td>Élimination Camunda BPM licence</td><td><strong>20 000€/an</strong></td></tr>
+  <tr><td>Réduction saisies manuelles Doc Control (IMAP automation)</td><td><strong>-40% du temps Doc Control</strong></td></tr>
+  <tr><td>Préparation audit externe</td><td><strong>0h de préparation</strong> (tout est déjà tracé)</td></tr>
+  <tr><td>Formation équipe</td><td><strong>&lt; 2h</strong> (interface intuitive)</td></tr>
+  <tr><td>Déploiement on-premise NAS</td><td><strong>Zéro coût Cloud</strong></td></tr>
+</table>
+
+<div class="page-break"></div>
+
+<h2>Prochaines étapes</h2>
+
+<table>
+  <tr><th>#</th><th>Action</th><th>Responsable</th><th>Délai</th></tr>
+  <tr><td>1</td><td>Accès à l'environnement de démo (URL, credentials)</td><td>Zen-gineering</td><td>J+1</td></tr>
+  <tr><td>2</td><td>Atelier de configuration du premier projet réel</td><td>Équipe projet</td><td>J+5</td></tr>
+  <tr><td>3</td><td>Formation équipe (admin + utilisateurs)</td><td>Zen-gineering</td><td>J+7</td></tr>
+  <tr><td>4</td><td>Import des données existantes (équipements, documents)</td><td>Conjoint</td><td>J+10</td></tr>
+  <tr><td>5</td><td>Go-live production</td><td>Équipe projet</td><td>J+15</td></tr>
+</table>
+
+<br/><br/>
+<p style="text-align:center; color:#90A4AE; font-size:9pt; border-top: 1px solid #E0E0E0; padding-top: 16px;">
+  <strong>Zen-gineering v3.2</strong> — Guide de Formation Complet<br/>
+  Scénario : Mon Chemical Plant — Unit U_A | Alphahexol Industries<br/>
+  Document confidentiel — Février 2026 — Pascal Gorisse
+</p>
+
+</body>
+</html>

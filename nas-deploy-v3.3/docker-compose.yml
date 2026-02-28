@@ -1,0 +1,97 @@
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15-alpine
+    container_name: zeng-postgres
+    environment:
+      POSTGRES_DB: zengineering
+      POSTGRES_USER: zengineering
+      POSTGRES_PASSWORD: ZenG_Prod_2026!
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - zeng-net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U zengineering"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  # MinIO - File storage
+  minio:
+    image: minio/minio:latest
+    container_name: zeng-minio
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: ZenG_Minio_2026!
+    volumes:
+      - minio_data:/data
+    networks:
+      - zeng-net
+    restart: unless-stopped
+
+  # MailHog - SMTP test server
+  mailhog:
+    image: mailhog/mailhog:latest
+    container_name: zeng-mailhog
+    networks:
+      - zeng-net
+    restart: unless-stopped
+
+  # NestJS Backend API
+  backend:
+    image: pascal1010/zengineering-backend:latest
+    container_name: zeng-backend
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+      DATABASE_URL: postgresql://zengineering:ZenG_Prod_2026!@postgres:5432/zengineering
+      JWT_SECRET: zen-gineering-jwt-secret-nas-prod-2026
+      CORS_ORIGIN: "*"
+      MINIO_ENDPOINT: minio
+      MINIO_PORT: 9000
+      MINIO_ACCESS_KEY: minioadmin
+      MINIO_SECRET_KEY: ZenG_Minio_2026!
+      MINIO_BUCKET: zengineering-files
+      MINIO_USE_SSL: "false"
+      SMTP_HOST: mailhog
+      SMTP_PORT: 1025
+      SMTP_FROM: noreply@zengineering.local
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - zeng-net
+    restart: unless-stopped
+
+  # Z'Engineering Frontend
+  frontend:
+    image: pascal1010/zengineering-frontend:latest
+    container_name: zeng-frontend
+    ports:
+      - "8080:80"
+    depends_on:
+      - backend
+    networks:
+      - zeng-net
+    restart: unless-stopped
+
+  # Portfolio Website
+  portfolio:
+    image: pascal1010/zengineering-portfolio:latest
+    container_name: zeng-portfolio
+    ports:
+      - "8081:80"
+    networks:
+      - zeng-net
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+  minio_data:
+
+networks:
+  zeng-net:
+    driver: bridge
