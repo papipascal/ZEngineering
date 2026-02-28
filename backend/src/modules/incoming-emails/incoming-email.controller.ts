@@ -39,32 +39,38 @@ export class IncomingEmailController {
   // Emails
   // ==========================================
 
-  @Get()
-  @ApiOperation({ summary: 'List incoming emails with filters' })
-  findAll(@Query() filter: IncomingEmailFilterDto) {
-    return this.service.findAll(filter);
+  // ==========================================
+  // Sender Whitelist  (must be before :id routes)
+  // ==========================================
+
+  @Get('whitelist')
+  @ApiOperation({ summary: 'List authorized external senders for a project' })
+  listWhitelist(@Query('projectId') projectId: string) {
+    return this.whitelistService.listWhitelist(projectId);
   }
 
-  @Get(':id')
-  @ApiOperation({ summary: 'Get incoming email details with attachments' })
-  findOne(@Param('id') id: string) {
-    return this.service.findOne(id);
+  @Post('whitelist')
+  @ApiOperation({ summary: 'Add email or domain to project sender whitelist' })
+  addToWhitelist(
+    @Body() body: { projectId: string; emailOrDomain: string; label?: string },
+    @Request() req: { user: { id: string } },
+  ) {
+    return this.whitelistService.addToWhitelist({
+      projectId: body.projectId,
+      emailOrDomain: body.emailOrDomain.toLowerCase().trim(),
+      label: body.label,
+      addedByUserId: req.user.id,
+    });
   }
 
-  @Patch(':id')
-  @ApiOperation({ summary: 'Update email status, purpose, document intent, or notes' })
-  update(@Param('id') id: string, @Body() dto: UpdateIncomingEmailDto) {
-    return this.service.update(id, dto);
-  }
-
-  @Post(':id/reply')
-  @ApiOperation({ summary: 'Reply to an incoming email' })
-  reply(@Param('id') id: string, @Body() dto: ReplyEmailDto) {
-    return this.service.replyToEmail(id, dto);
+  @Delete('whitelist/:id')
+  @ApiOperation({ summary: 'Remove entry from sender whitelist' })
+  removeFromWhitelist(@Param('id') id: string) {
+    return this.whitelistService.removeFromWhitelist(id);
   }
 
   // ==========================================
-  // Routing Rules
+  // Routing Rules  (must be before :id routes)
   // ==========================================
 
   @Get('rules/project/:projectId')
@@ -92,32 +98,30 @@ export class IncomingEmailController {
   }
 
   // ==========================================
-  // Sender Whitelist
+  // Emails
   // ==========================================
 
-  @Get('whitelist')
-  @ApiOperation({ summary: 'List authorized external senders for a project' })
-  listWhitelist(@Query('projectId') projectId: string) {
-    return this.whitelistService.listWhitelist(projectId);
+  @Get()
+  @ApiOperation({ summary: 'List incoming emails with filters' })
+  findAll(@Query() filter: IncomingEmailFilterDto) {
+    return this.service.findAll(filter);
   }
 
-  @Post('whitelist')
-  @ApiOperation({ summary: 'Add email or domain to project sender whitelist' })
-  addToWhitelist(
-    @Body() body: { projectId: string; emailOrDomain: string; label?: string },
-    @Request() req: { user: { id: string } },
-  ) {
-    return this.whitelistService.addToWhitelist({
-      projectId: body.projectId,
-      emailOrDomain: body.emailOrDomain.toLowerCase().trim(),
-      label: body.label,
-      addedByUserId: req.user.id,
-    });
+  @Get(':id')
+  @ApiOperation({ summary: 'Get incoming email details with attachments' })
+  findOne(@Param('id') id: string) {
+    return this.service.findOne(id);
   }
 
-  @Delete('whitelist/:id')
-  @ApiOperation({ summary: 'Remove entry from sender whitelist' })
-  removeFromWhitelist(@Param('id') id: string) {
-    return this.whitelistService.removeFromWhitelist(id);
+  @Patch(':id')
+  @ApiOperation({ summary: 'Update email status, purpose, document intent, or notes' })
+  update(@Param('id') id: string, @Body() dto: UpdateIncomingEmailDto) {
+    return this.service.update(id, dto);
+  }
+
+  @Post(':id/reply')
+  @ApiOperation({ summary: 'Reply to an incoming email' })
+  reply(@Param('id') id: string, @Body() dto: ReplyEmailDto) {
+    return this.service.replyToEmail(id, dto);
   }
 }

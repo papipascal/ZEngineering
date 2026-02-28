@@ -45,7 +45,8 @@ export class ImapPollingService implements OnModuleInit, OnModuleDestroy {
     try {
       await this.fetchEmails();
     } catch (err) {
-      this.logger.error('IMAP poll error', err instanceof Error ? err.message : err);
+      const msg = err instanceof Error ? `${err.message} — ${(err as any).response ?? ''}` : String(err);
+      this.logger.error(`IMAP poll error: ${msg}`);
     } finally {
       this.polling = false;
     }
