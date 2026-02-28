@@ -15,10 +15,10 @@ async function bootstrap() {
     }),
   );
 
-  // CORS
-  app.enableCors({
-    origin: process.env['CORS_ORIGIN'] ?? 'http://localhost:3001',
-  });
+  // CORS — support multiple origins (comma-separated) or wildcard
+  const corsOrigin = process.env['CORS_ORIGIN'] ?? 'http://localhost:3001';
+  const origins = corsOrigin === '*' ? true : corsOrigin.split(',').map((o) => o.trim());
+  app.enableCors({ origin: origins, credentials: true });
 
   // Swagger
   const config = new DocumentBuilder()
