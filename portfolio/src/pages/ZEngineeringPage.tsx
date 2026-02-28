@@ -184,21 +184,21 @@ export default function ZEngineeringPage() {
               <Stack direction="row" spacing={1.5} flexWrap="wrap" useFlexGap>
                 <Button
                   variant="contained"
-                  startIcon={<GitHub />}
-                  href="https://github.com/papipascal/ZEngineering"
+                  startIcon={<RocketLaunch />}
+                  href="https://zengineering-app.netlify.app"
                   target="_blank"
                   sx={{ bgcolor: 'rgba(255,255,255,0.25)', color: 'white', '&:hover': { bgcolor: 'rgba(255,255,255,0.4)' } }}
                 >
-                  Code source
+                  Lancer l'application
                 </Button>
                 <Button
                   variant="contained"
-                  startIcon={<RocketLaunch />}
-                  href="https://github.com/papipascal/ZEngineering#readme"
+                  startIcon={<GitHub />}
+                  href="https://github.com/papipascal/ZEngineering"
                   target="_blank"
                   sx={{ bgcolor: 'rgba(0,0,0,0.3)', '&:hover': { bgcolor: 'rgba(0,0,0,0.5)' } }}
                 >
-                  Documentation
+                  Code source
                 </Button>
                 <Button
                   variant="outlined"
