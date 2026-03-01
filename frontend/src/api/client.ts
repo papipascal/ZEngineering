@@ -1,10 +1,15 @@
 import axios from 'axios';
 
-const API_BASE = import.meta.env.VITE_API_URL ?? '';
+// Runtime override: localStorage 'zen_api_url' takes priority over build-time VITE_API_URL
+export const getApiBase = () =>
+  localStorage.getItem('zen_api_url') || import.meta.env.VITE_API_URL || '';
 
 const client = axios.create({
-  baseURL: API_BASE,
-  headers: { 'Content-Type': 'application/json' },
+  baseURL: getApiBase(),
+  headers: {
+    'Content-Type': 'application/json',
+    'Bypass-Tunnel-Reminder': 'true',  // bypass localtunnel verification page
+  },
 });
 
 // Attach JWT token to every request
