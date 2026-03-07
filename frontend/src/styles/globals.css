@@ -113,6 +113,15 @@ html, body, #root { height: 100%; background: var(--bg-primary); color: var(--te
 }
 .ai-toggle-btn:hover { opacity: 0.9; }
 
+.back-v3-btn {
+  display: flex; align-items: center;
+  padding: 5px 12px; border-radius: 8px;
+  background: rgba(59,130,246,0.12); border: 1px solid rgba(59,130,246,0.35);
+  color: var(--accent); font-size: 12px; font-weight: 600;
+  text-decoration: none; transition: background 0.15s;
+}
+.back-v3-btn:hover { background: rgba(59,130,246,0.22); }
+
 .avatar-btn {
   width: 32px; height: 32px; border-radius: 50%;
   background: linear-gradient(135deg, var(--accent), #7c3aed);

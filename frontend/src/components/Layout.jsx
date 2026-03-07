@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { NavLink, Outlet, useLocation } from 'react-router-dom';
 import AIPanel from './AIPanel.jsx';
 import CommandPalette from './CommandPalette.jsx';
+import { useAuth } from '../App.jsx';
 
 const NAV = [
   { section: "PROJET" },
@@ -23,13 +24,19 @@ const NAV = [
   { path: "/organization",  icon: "🏢", label: "Organisation" },
 ];
 
-export default function Layout({ projectData }) {
+export default function Layout({ projectData, v3Url }) {
   const [aiOpen, setAiOpen] = useState(true);
   const [paletteOpen, setPaletteOpen] = useState(false);
   const [pendingAIPrompt, setPendingAIPrompt] = useState(null);
   const location = useLocation();
+  const auth = useAuth();
 
   const unreadEmails = projectData?.stats?.unreadEmails || 0;
+
+  const userName = auth?.user?.name || 'Utilisateur';
+  const userInitials = userName.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
+  const projectName = auth?.project?.name || '';
+  const userRole = auth?.project?.myRole || '';
 
   // Ctrl+K → ouvrir palette
   useEffect(() => {
@@ -96,7 +103,14 @@ export default function Layout({ projectData }) {
             <button className="ai-toggle-btn" onClick={() => setAiOpen(p => !p)}>
               🧠 {aiOpen ? "Masquer IA" : "Assistant IA"}
             </button>
-            <div className="avatar-btn">AM</div>
+            {v3Url && (
+              <a href={`${v3Url}/version-select`} className="back-v3-btn" title="Retour à l'interface classique">
+                ← V3
+              </a>
+            )}
+            <div className="avatar-btn" title={`${userName}${userRole ? ` — ${userRole}` : ''}${projectName ? ` | ${projectName}` : ''}`}>
+              {userInitials}
+            </div>
           </div>
         </div>
 
