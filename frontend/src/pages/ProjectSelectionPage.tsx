@@ -25,7 +25,7 @@ export default function ProjectSelectionPage() {
 
   const handleSelect = (p: Project) => {
     selectProject({ id: p.id, name: p.name, status: p.status, myRole: p.myRole });
-    navigate('/');
+    navigate('/version-select');
   };
 
   return (

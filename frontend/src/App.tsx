@@ -28,6 +28,9 @@ import OrganizationPage from './pages/OrganizationPage';
 import AuditPage from './pages/AuditPage';
 import ProfilePage from './pages/ProfilePage';
 import DocumentProposalsPage from './pages/DocumentProposalsPage';
+import ConnectionsPage from './pages/ConnectionsPage';
+import SparePartsPage from './pages/SparePartsPage';
+import VersionSelectPage from './pages/VersionSelectPage';
 
 function App() {
   return (
@@ -41,6 +44,14 @@ function App() {
               element={
                 <ProtectedRoute>
                   <ProjectSelectionPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/version-select"
+              element={
+                <ProtectedRoute>
+                  <VersionSelectPage />
                 </ProtectedRoute>
               }
             />
@@ -74,6 +85,8 @@ function App() {
               <Route path="/project-setup" element={<ProjectSetupPage />} />
               <Route path="/profile" element={<ProfilePage />} />
               <Route path="/document-proposals" element={<DocumentProposalsPage />} />
+              <Route path="/connections" element={<ConnectionsPage />} />
+              <Route path="/spare-parts" element={<SparePartsPage />} />
             </Route>
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
