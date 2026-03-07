@@ -1,0 +1,79 @@
+{
+  "folders": [
+    { "name": "🚀 Zengineering V4 — Root",    "path": "." },
+    { "name": "⚙️  Backend — Express + Claude", "path": "backend" },
+    { "name": "🎨 Frontend — React UI",        "path": "frontend" },
+    { "name": "📦 Archive V3",                 "path": "../zengineering-v3" }
+  ],
+  "settings": {
+    "editor.formatOnSave": true,
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "editor.tabSize": 2,
+    "workbench.colorTheme": "One Dark Pro",
+    "workbench.iconTheme": "material-icon-theme",
+    "terminal.integrated.defaultProfile.linux": "bash",
+    "files.associations": { "*.env*": "dotenv" },
+    "emmet.includeLanguages": { "javascript": "javascriptreact" }
+  },
+  "extensions": {
+    "recommendations": [
+      "esbenp.prettier-vscode",
+      "dbaeumer.vscode-eslint",
+      "bradlc.vscode-tailwindcss",
+      "zhuangtongfa.material-theme",
+      "pkief.material-icon-theme",
+      "christian-kohler.path-intellisense",
+      "formulahendry.auto-rename-tag",
+      "ms-vscode.vscode-typescript-next"
+    ]
+  },
+  "launch": {
+    "configurations": [
+      {
+        "name": "🔧 Backend — Node.js",
+        "type": "node",
+        "request": "launch",
+        "program": "${workspaceFolder}/backend/src/server.js",
+        "envFile": "${workspaceFolder}/.env",
+        "console": "integratedTerminal"
+      }
+    ],
+    "compounds": [
+      {
+        "name": "🚀 Full Stack (Backend + Frontend)",
+        "configurations": ["🔧 Backend — Node.js"]
+      }
+    ]
+  },
+  "tasks": {
+    "version": "2.0.0",
+    "tasks": [
+      {
+        "label": "📦 Install All",
+        "type": "shell",
+        "command": "npm install && cd backend && npm install && cd ../frontend && npm install",
+        "group": "build",
+        "presentation": { "reveal": "always", "panel": "new" }
+      },
+      {
+        "label": "🔧 Start Backend",
+        "type": "shell",
+        "command": "cd backend && npm run dev",
+        "group": "test",
+        "presentation": { "reveal": "always", "panel": "dedicated" }
+      },
+      {
+        "label": "🎨 Start Frontend",
+        "type": "shell",
+        "command": "cd frontend && npm run dev",
+        "group": "test",
+        "presentation": { "reveal": "always", "panel": "dedicated" }
+      },
+      {
+        "label": "🚀 Start Full Stack",
+        "dependsOn": ["🔧 Start Backend", "🎨 Start Frontend"],
+        "group": { "kind": "build", "isDefault": true }
+      }
+    ]
+  }
+}
