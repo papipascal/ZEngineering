@@ -22,6 +22,10 @@ import { NotificationModule } from './modules/notifications/notification.module.
 import { AuditModule } from './modules/audit/audit.module.js';
 import { ExportModule } from './modules/export/export.module.js';
 import { DocumentProposalsModule } from './modules/document-proposals/document-proposals.module.js';
+import { ConnectionsModule } from './modules/connections/connections.module.js';
+import { SparePartsModule } from './modules/spare-parts/spare-parts.module.js';
+import { InspectionsModule } from './modules/inspections/inspections.module.js';
+import { MaintenanceModule } from './modules/maintenance/maintenance.module.js';
 import { AppController } from './app.controller.js';
 import { AppService } from './app.service.js';
 
@@ -50,6 +54,10 @@ import { AppService } from './app.service.js';
     AuditModule,
     ExportModule,
     DocumentProposalsModule,
+    ConnectionsModule,
+    SparePartsModule,
+    InspectionsModule,
+    MaintenanceModule,
   ],
   controllers: [AppController],
   providers: [AppService],

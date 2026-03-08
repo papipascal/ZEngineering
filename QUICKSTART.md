@@ -1,245 +1,101 @@
-# Quick Start - Zen-gineering
+# Quick Start — Zen-gineering V3.4
 
-Guide de démarrage rapide pour lancer Zen-gineering en local.
+## Accès immédiat (production)
 
-## 🚀 Démarrage rapide avec Docker Compose
+L'application est déployée et opérationnelle :
+
+| | URL |
+|--|-----|
+| **Application** | https://zengineering-app.netlify.app |
+| **API** | https://backend-production-dfa4.up.railway.app |
+
+**Login rapide** : `admin@zengineering.local` / `Password123!`
+
+---
+
+## Lancer en local (développement)
 
 ### Prérequis
+- Docker Desktop lancé
+- Node.js v22+
 
-- Docker Desktop installé
-- Docker Compose v2+
-- 8 GB RAM minimum
-- 10 GB d'espace disque
-
-### Étapes
-
-1. **Cloner le repository**
+### 1. Cloner
 
 ```bash
-git clone https://github.com/votre-org/zen-gineering.git
-cd zen-gineering
+git clone https://github.com/papipascal/Zen-gineering.git
+cd Zen-gineering
 ```
 
-2. **Configurer les variables d'environnement**
+### 2. Services Docker
 
 ```bash
-cp .env.example .env
-# Éditez .env selon vos besoins (optionnel pour dev local)
+docker compose up -d postgres minio
 ```
 
-3. **Lancer tous les services**
-
-```bash
-docker-compose up -d
-```
-
-Cette commande va démarrer :
-- PostgreSQL (port 5432)
-- MongoDB (port 27017)
-- Redis (port 6379)
-- Elasticsearch (port 9200)
-- MinIO (port 9000, console 9001)
-- MailHog (SMTP 1025, UI 8025)
-- Backend API (port 3000)
-- Frontend (port 3001)
-
-4. **Vérifier que tout fonctionne**
-
-```bash
-docker-compose ps
-```
-
-Tous les services doivent être "Up"
-
-5. **Accéder à l'application**
-
-- **Frontend:** http://localhost:3001
-- **Backend API:** http://localhost:3000
-- **API Docs (Swagger):** http://localhost:3000/api/docs
-- **MinIO Console:** http://localhost:9001 (minioadmin/minioadmin)
-- **MailHog:** http://localhost:8025
-
-6. **Créer un compte admin**
-
-```bash
-# Depuis un autre terminal
-docker-compose exec backend npm run seed:admin
-```
-
-Identifiants par défaut :
-- Email: admin@zengineering.local
-- Password: Admin123!
-
-## 🛠️ Développement local sans Docker
-
-Si vous préférez développer sans Docker :
-
-### Backend
+### 3. Backend
 
 ```bash
 cd backend
 npm install
-# Configure DATABASE_URL in .env (already set for local dev)
-npm run prisma:generate
-npm run prisma:migrate
-npm run seed
+npx prisma migrate dev
+npx prisma db seed
 npm run start:dev
 ```
 
-### Frontend
+Le backend démarre sur http://localhost:3000
+Swagger : http://localhost:3000/api/docs
+
+### 4. Frontend
+
+```bash
+# Nouveau terminal
+cd frontend
+npm install
+npm run dev
+```
+
+L'application est disponible sur **http://localhost:3001**
+
+---
+
+## Ports locaux
+
+| Service | URL |
+|---------|-----|
+| Application | http://localhost:3001 |
+| API Backend | http://localhost:3000 |
+| Swagger | http://localhost:3000/api/docs |
+| MinIO Console | http://localhost:9001 (minioadmin/minioadmin) |
+| MailHog | http://localhost:8025 |
+
+---
+
+## Déployer en production
+
+### Backend → Railway
+
+```bash
+cd backend
+railway service link backend
+railway up
+```
+
+### Frontend → Netlify
 
 ```bash
 cd frontend
-npm install
-cp .env.example .env
-# Configurez REACT_APP_API_URL
-npm start
+npx vite build
+npx netlify deploy --dir=dist --prod
 ```
 
-### Services externes requis
+---
 
-Vous devrez installer localement :
-- PostgreSQL 15+
-- MongoDB 7+
-- Redis 7+
-- Elasticsearch 8+ (optionnel)
-- MinIO ou compte AWS S3
+## Documentation complète
 
-## 📊 Données de test
+- [Guide Utilisateur](./GUIDE-UTILISATEUR.md) — Utilisation de l'application
+- [Guide Railway](./DEPLOY-RAILWAY.md) — Déploiement backend complet
+- [Demo Guide](./DEMO-GUIDE.md) — Scénario de démonstration
 
-Pour charger des données de test :
+---
 
-```bash
-docker-compose exec backend npm run seed:demo
-```
-
-Cela créera :
-- 5 utilisateurs de test
-- 3 projets exemple
-- Documents et workflows de démonstration
-
-## 🧪 Lancer les tests
-
-### Backend
-
-```bash
-docker-compose exec backend npm test
-```
-
-### Frontend
-
-```bash
-docker-compose exec frontend npm test
-```
-
-### Tests E2E
-
-```bash
-npm run test:e2e
-```
-
-## 🔍 Vérification de santé
-
-### Health checks
-
-```bash
-# Backend
-curl http://localhost:3000/health
-
-# Base de données
-docker-compose exec postgres pg_isready
-docker-compose exec mongodb mongosh --eval "db.runCommand('ping')"
-```
-
-## 📝 Logs
-
-### Voir les logs en temps réel
-
-```bash
-# Tous les services
-docker-compose logs -f
-
-# Un service spécifique
-docker-compose logs -f backend
-docker-compose logs -f frontend
-```
-
-## 🛑 Arrêter les services
-
-```bash
-# Arrêter sans supprimer les volumes
-docker-compose stop
-
-# Arrêter et supprimer les containers
-docker-compose down
-
-# Supprimer aussi les volumes (⚠️ perte de données)
-docker-compose down -v
-```
-
-## 🔄 Mise à jour
-
-```bash
-git pull
-docker-compose down
-docker-compose build
-docker-compose up -d
-```
-
-## 🐛 Troubleshooting
-
-### Port déjà utilisé
-
-Si un port est déjà utilisé, modifiez `docker-compose.yml` :
-
-```yaml
-ports:
-  - "3002:3000"  # Backend sur 3002 au lieu de 3000
-```
-
-### Problèmes de connexion base de données
-
-```bash
-# Réinitialiser les volumes
-docker-compose down -v
-docker-compose up -d
-```
-
-### Build qui échoue
-
-```bash
-# Rebuild sans cache
-docker-compose build --no-cache
-```
-
-### Espace disque insuffisant
-
-```bash
-# Nettoyer les images Docker
-docker system prune -a
-```
-
-## 📚 Prochaines étapes
-
-1. Lisez la [documentation complète](./docs/README.md)
-2. Consultez le [guide de contribution](./CONTRIBUTING.md)
-3. Explorez l'[architecture](./docs/architecture.md)
-4. Configurez vos premiers [processus](./docs/processus/README.md)
-
-## 💬 Support
-
-- GitHub Issues : Pour les bugs et feature requests
-- Documentation : [docs/](./docs/)
-- Email : support@zengineering.local
-
-## 🎯 Checklist de démarrage
-
-- [ ] Docker Compose lancé
-- [ ] Services tous "Up"
-- [ ] Frontend accessible
-- [ ] Backend API répond
-- [ ] Compte admin créé
-- [ ] Données de test chargées
-- [ ] Tests passent
-
-Bienvenue dans Zen-gineering ! 🎉
+*Version 3.4 — Mars 2026*

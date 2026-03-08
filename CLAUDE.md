@@ -83,9 +83,9 @@ docker compose -f docker-compose.nas.yml up -d
 ```
 
 ## Demo Credentials
-- admin@zen.io / admin123 (Admin)
-- marie@zen.io / password123
-- jean@zen.io / password123
+- admin@zengineering.local / Password123! (Admin — Process Lead)
+- chef.projet@zengineering.local / Password123! (Chef de Projet)
+- ingenieur@zengineering.local / Password123! (Ingénieur Mécanique)
 
 ## Git Conventions
 - Commit message format: `feat: V{X.Y} - {description}`

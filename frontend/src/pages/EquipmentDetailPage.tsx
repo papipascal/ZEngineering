@@ -5,6 +5,7 @@ import {
   TextField, Stack, Alert, CircularProgress, Dialog, DialogTitle,
   DialogContent, DialogActions, MenuItem, IconButton, Tooltip, Drawer,
   Accordion, AccordionSummary, AccordionDetails, Autocomplete,
+  Tabs, Tab, Table, TableHead, TableRow, TableCell, TableBody, Paper,
 } from '@mui/material';
 import {
   CheckCircle as CheckIcon,
@@ -12,16 +13,48 @@ import {
   HelpOutline as UnknownIcon,
   ExpandMore as ExpandMoreIcon,
   Close as CloseIcon,
+  Add as AddIcon,
+  Delete as DeleteIcon,
+  Link as LinkIcon,
+  Build as BuildIcon,
+  FactCheck as InspectionIcon,
+  Engineering as MaintenanceIcon,
 } from '@mui/icons-material';
 import { equipmentApi, Equipment } from '../api/equipment';
 import { changeRequestApi, ChangeRequest } from '../api/change-requests';
 import { documentApi, Document as DocType } from '../api/documents';
 import { dataOriginsApi, DataOrigin, StalenessField } from '../api/data-origins';
 import { documentRegisterApi, DocumentRegisterEntry } from '../api/document-register';
+import { connectionsApi, Connection, ConnectionType, CreateConnectionDto } from '../api/connections';
+import { sparePartsApi, SparePart, SparePartCriticality, CreateSparePartDto } from '../api/spare-parts';
+import { inspectionsApi, InspectionRecord, InspectionType, InspectionResult, CreateInspectionDto } from '../api/inspections';
+import { maintenanceApi, MaintenancePlan, MaintenanceFrequency, CreateMaintenancePlanDto } from '../api/maintenance';
 import { useProject } from '../auth/ProjectContext';
 import { useAuth } from '../auth/AuthContext';
 import DocumentList from '../components/DocumentList';
 import FileUploadButton from '../components/FileUploadButton';
+
+const CONNECTION_TYPE_LABELS: Record<ConnectionType, string> = {
+  PROCESS_LINE: 'Ligne process', INSTRUMENT_LOOP: 'Boucle instru.',
+  ELECTRICAL_CABLE: 'Câble élec.', UTILITY_LINE: 'Utilité', DRAIN_VENT: 'Drain/Évent',
+};
+const CRITICALITY_LABELS: Record<SparePartCriticality, string> = {
+  CRITICAL: 'Critique', IMPORTANT: 'Important', STANDARD: 'Standard', CONSUMABLE: 'Consommable',
+};
+const CRITICALITY_COLORS: Record<SparePartCriticality, 'error' | 'warning' | 'info' | 'default'> = {
+  CRITICAL: 'error', IMPORTANT: 'warning', STANDARD: 'info', CONSUMABLE: 'default',
+};
+const INSPECTION_TYPE_LABELS: Record<InspectionType, string> = {
+  VISUAL: 'Visuel', NDT_UT: 'UT', NDT_RT: 'Radiographie', NDT_PT: 'Ressuage', NDT_MT: 'Magnétoscopie',
+  PRESSURE_TEST: 'Test pression', FUNCTIONAL_TEST: 'Essai fonct.', FAT: 'FAT', SAT: 'SAT', PMI: 'PMI',
+};
+const INSPECTION_RESULT_COLORS: Record<InspectionResult, 'success' | 'warning' | 'error' | 'info'> = {
+  PASS: 'success', PASS_WITH_REMARKS: 'warning', FAIL: 'error', PENDING_REVIEW: 'info',
+};
+const MAINTENANCE_FREQ_LABELS: Record<MaintenanceFrequency, string> = {
+  DAILY: 'Quotidien', WEEKLY: 'Hebdo', MONTHLY: 'Mensuel', QUARTERLY: 'Trimestriel',
+  SEMI_ANNUAL: 'Semestriel', ANNUAL: 'Annuel', BIENNIAL: 'Bisannuel', ON_CONDITION: 'Sur condition',
+};
 
 const EDITABLE_FIELDS = [
   { key: 'operatingPressure', label: 'Operating Pressure (barg)' },
@@ -43,6 +76,7 @@ export default function EquipmentDetailPage() {
   const navigate = useNavigate();
   const { project } = useProject();
   const { user } = useAuth();
+  const [tab, setTab] = useState(0);
   const [eq, setEq] = useState<Equipment | null>(null);
   const [changeRequests, setChangeRequests] = useState<ChangeRequest[]>([]);
   const [loading, setLoading] = useState(true);
@@ -53,6 +87,22 @@ export default function EquipmentDetailPage() {
   const [submitError, setSubmitError] = useState('');
   const [submitSuccess, setSubmitSuccess] = useState('');
   const [documents, setDocuments] = useState<DocType[]>([]);
+
+  // New satellite state
+  const [connections, setConnections]       = useState<Connection[]>([]);
+  const [spareParts, setSpareParts]         = useState<SparePart[]>([]);
+  const [inspections, setInspections]       = useState<InspectionRecord[]>([]);
+  const [maintenancePlans, setMaintPlans]   = useState<MaintenancePlan[]>([]);
+
+  // Dialog states for new entities
+  const [connDialog, setConnDialog]   = useState(false);
+  const [spDialog, setSpDialog]       = useState(false);
+  const [inspecDialog, setInspecDialog] = useState(false);
+  const [maintDialog, setMaintDialog] = useState(false);
+  const [connForm, setConnForm]   = useState<Partial<CreateConnectionDto>>({ type: 'PROCESS_LINE', isoCertRequired: false });
+  const [spForm, setSpForm]       = useState<Partial<CreateSparePartDto>>({ criticality: 'STANDARD', recommendedQty: 1, stockQty: 0, currency: 'EUR' });
+  const [inspecForm, setInspecForm] = useState<Partial<CreateInspectionDto>>({ result: 'PASS' });
+  const [maintForm, setMaintForm] = useState<Partial<CreateMaintenancePlanDto>>({ frequency: 'ANNUAL' });
 
   // AGO state
   const [agoFields, setAgoFields] = useState<StalenessField[]>([]);
@@ -83,6 +133,10 @@ export default function EquipmentDetailPage() {
         setChangeRequests(r.data.filter((cr) => cr.equipmentId === id)),
       ),
       documentApi.list({ equipmentId: id }).then((r) => setDocuments(r.data)),
+      connectionsApi.list({ equipmentId: id }).then((r) => setConnections(r.data)),
+      sparePartsApi.list({ equipmentId: id }).then((r) => setSpareParts(r.data)),
+      inspectionsApi.list({ equipmentId: id }).then((r) => setInspections(r.data)),
+      maintenanceApi.list({ equipmentId: id }).then((r) => setMaintPlans(r.data)),
     ]).finally(() => setLoading(false));
     loadAgo();
   }, [id]);
@@ -166,6 +220,36 @@ export default function EquipmentDetailPage() {
     }
   };
 
+  // Satellite handlers
+  const handleAddConnection = async () => {
+    if (!id || !connForm.lineNumber || !project) return;
+    const res = await connectionsApi.create({ ...connForm, projectId: project.id, fromEquipmentId: id } as CreateConnectionDto);
+    setConnections(prev => [...prev, res.data]);
+    setConnDialog(false);
+    setConnForm({ type: 'PROCESS_LINE', isoCertRequired: false });
+  };
+  const handleAddSparePart = async () => {
+    if (!id || !spForm.partNumber || !spForm.description) return;
+    const res = await sparePartsApi.create({ ...spForm, equipmentId: id } as CreateSparePartDto);
+    setSpareParts(prev => [...prev, res.data]);
+    setSpDialog(false);
+    setSpForm({ criticality: 'STANDARD', recommendedQty: 1, stockQty: 0, currency: 'EUR' });
+  };
+  const handleAddInspection = async () => {
+    if (!id || !inspecForm.type || !inspecForm.inspectionDate) return;
+    const res = await inspectionsApi.create({ ...inspecForm, equipmentId: id } as CreateInspectionDto);
+    setInspections(prev => [res.data, ...prev]);
+    setInspecDialog(false);
+    setInspecForm({ result: 'PASS' });
+  };
+  const handleAddMaint = async () => {
+    if (!id || !maintForm.title || !maintForm.frequency) return;
+    const res = await maintenanceApi.create({ ...maintForm, equipmentId: id } as CreateMaintenancePlanDto);
+    setMaintPlans(prev => [...prev, res.data]);
+    setMaintDialog(false);
+    setMaintForm({ frequency: 'ANNUAL' });
+  };
+
   if (loading) return <Box textAlign="center" mt={4}><CircularProgress /></Box>;
   if (!eq) return <Typography>Equipment not found</Typography>;
 
@@ -197,13 +281,28 @@ export default function EquipmentDetailPage() {
         &larr; Back to Equipment
       </Button>
 
-      <Typography variant="h4" gutterBottom>
-        {eq.tagNumber} - {eq.service}
-      </Typography>
+      <Stack direction="row" alignItems="center" spacing={2} mb={1}>
+        <Typography variant="h4" fontWeight={700}>{eq.tagNumber}</Typography>
+        <Chip label={eq.category} size="small" />
+        {eq.subType && <Chip label={eq.subType} size="small" variant="outlined" />}
+      </Stack>
+      <Typography color="text.secondary" mb={2}>{eq.service}</Typography>
 
       {submitSuccess && <Alert severity="success" sx={{ mb: 2 }} onClose={() => setSubmitSuccess('')}>{submitSuccess}</Alert>}
 
-      <Grid container spacing={3}>
+      {/* ===== TABS ===== */}
+      <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 3 }}>
+        <Tabs value={tab} onChange={(_, v) => setTab(v)}>
+          <Tab label="Technique" />
+          <Tab label={`Connexions (${connections.length})`} icon={<LinkIcon fontSize="small" />} iconPosition="start" />
+          <Tab label={`Pièces détachées (${spareParts.length})`} icon={<BuildIcon fontSize="small" />} iconPosition="start" />
+          <Tab label={`Inspections (${inspections.length})`} icon={<InspectionIcon fontSize="small" />} iconPosition="start" />
+          <Tab label={`Maintenance (${maintenancePlans.length})`} icon={<MaintenanceIcon fontSize="small" />} iconPosition="start" />
+        </Tabs>
+      </Box>
+
+      {/* ===== TAB 0: TECHNIQUE ===== */}
+      {tab === 0 && <Grid container spacing={3}>
         <Grid size={{ xs: 12, md: 8 }}>
           <Card>
             <CardContent>
@@ -358,7 +457,366 @@ export default function EquipmentDetailPage() {
             </Card>
           )}
         </Grid>
-      </Grid>
+      </Grid>}
+
+      {/* ===== TAB 1: CONNEXIONS ===== */}
+      {tab === 1 && (
+        <Box>
+          <Stack direction="row" justifyContent="flex-end" mb={2}>
+            <Button variant="contained" size="small" startIcon={<AddIcon />} onClick={() => setConnDialog(true)}>
+              Ajouter une ligne
+            </Button>
+          </Stack>
+          <Paper variant="outlined">
+            <Table size="small">
+              <TableHead>
+                <TableRow sx={{ bgcolor: 'grey.50' }}>
+                  <TableCell><strong>N° de ligne</strong></TableCell>
+                  <TableCell><strong>Type</strong></TableCell>
+                  <TableCell><strong>Fluide</strong></TableCell>
+                  <TableCell><strong>Vers</strong></TableCell>
+                  <TableCell><strong>DN</strong></TableCell>
+                  <TableCell><strong>Spec matière</strong></TableCell>
+                  <TableCell />
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {connections.length === 0 && (
+                  <TableRow><TableCell colSpan={7} align="center" sx={{ py: 3, color: 'text.secondary' }}>
+                    Aucune connexion enregistrée
+                  </TableCell></TableRow>
+                )}
+                {connections.map(c => (
+                  <TableRow key={c.id} hover>
+                    <TableCell sx={{ fontFamily: 'monospace', fontWeight: 600 }}>{c.lineNumber}</TableCell>
+                    <TableCell><Chip label={CONNECTION_TYPE_LABELS[c.type]} size="small" variant="outlined" /></TableCell>
+                    <TableCell>{c.fluid ?? '—'}</TableCell>
+                    <TableCell>
+                      {c.toEquipment ? <Chip label={c.toEquipment.tagNumber} size="small" /> : (c.toNozzle ?? '—')}
+                    </TableCell>
+                    <TableCell>{c.nominalDiameter ?? '—'}</TableCell>
+                    <TableCell>{c.materialSpec ?? '—'}</TableCell>
+                    <TableCell>
+                      <Tooltip title="Supprimer">
+                        <IconButton size="small" color="error" onClick={() => { connectionsApi.remove(c.id); setConnections(p => p.filter(x => x.id !== c.id)); }}>
+                          <DeleteIcon fontSize="small" />
+                        </IconButton>
+                      </Tooltip>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </Paper>
+        </Box>
+      )}
+
+      {/* ===== TAB 2: PIÈCES DÉTACHÉES ===== */}
+      {tab === 2 && (
+        <Box>
+          <Stack direction="row" justifyContent="flex-end" mb={2}>
+            <Button variant="contained" size="small" startIcon={<AddIcon />} onClick={() => setSpDialog(true)}>
+              Ajouter une pièce
+            </Button>
+          </Stack>
+          <Paper variant="outlined">
+            <Table size="small">
+              <TableHead>
+                <TableRow sx={{ bgcolor: 'grey.50' }}>
+                  <TableCell><strong>Réf.</strong></TableCell>
+                  <TableCell><strong>Description</strong></TableCell>
+                  <TableCell><strong>Fabricant</strong></TableCell>
+                  <TableCell><strong>Criticité</strong></TableCell>
+                  <TableCell align="right"><strong>Qté rec.</strong></TableCell>
+                  <TableCell align="right"><strong>Stock</strong></TableCell>
+                  <TableCell align="right"><strong>Prix unit.</strong></TableCell>
+                  <TableCell />
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {spareParts.length === 0 && (
+                  <TableRow><TableCell colSpan={8} align="center" sx={{ py: 3, color: 'text.secondary' }}>
+                    Aucune pièce détachée
+                  </TableCell></TableRow>
+                )}
+                {spareParts.map(p => (
+                  <TableRow key={p.id} hover sx={{ bgcolor: p.stockQty < p.recommendedQty ? 'error.50' : undefined }}>
+                    <TableCell sx={{ fontFamily: 'monospace' }}>{p.partNumber}</TableCell>
+                    <TableCell>{p.description}</TableCell>
+                    <TableCell>{p.manufacturer ?? '—'}</TableCell>
+                    <TableCell>
+                      <Chip label={CRITICALITY_LABELS[p.criticality]} color={CRITICALITY_COLORS[p.criticality]} size="small" />
+                    </TableCell>
+                    <TableCell align="right">{p.recommendedQty}</TableCell>
+                    <TableCell align="right">
+                      <Typography fontWeight={600} color={p.stockQty < p.recommendedQty ? 'error' : 'success.main'}>{p.stockQty}</Typography>
+                    </TableCell>
+                    <TableCell align="right">
+                      {p.unitCost != null ? p.unitCost.toLocaleString('fr-FR', { style: 'currency', currency: p.currency }) : '—'}
+                    </TableCell>
+                    <TableCell>
+                      <Tooltip title="Supprimer">
+                        <IconButton size="small" color="error" onClick={() => { sparePartsApi.remove(p.id); setSpareParts(prev => prev.filter(x => x.id !== p.id)); }}>
+                          <DeleteIcon fontSize="small" />
+                        </IconButton>
+                      </Tooltip>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </Paper>
+        </Box>
+      )}
+
+      {/* ===== TAB 3: INSPECTIONS ===== */}
+      {tab === 3 && (
+        <Box>
+          <Stack direction="row" justifyContent="flex-end" mb={2}>
+            <Button variant="contained" size="small" startIcon={<AddIcon />} onClick={() => setInspecDialog(true)}>
+              Ajouter un contrôle
+            </Button>
+          </Stack>
+          <Paper variant="outlined">
+            <Table size="small">
+              <TableHead>
+                <TableRow sx={{ bgcolor: 'grey.50' }}>
+                  <TableCell><strong>Date</strong></TableCell>
+                  <TableCell><strong>Type</strong></TableCell>
+                  <TableCell><strong>Résultat</strong></TableCell>
+                  <TableCell><strong>Inspecteur</strong></TableCell>
+                  <TableCell><strong>Certificat</strong></TableCell>
+                  <TableCell><strong>Prochaine date</strong></TableCell>
+                  <TableCell><strong>Remarques</strong></TableCell>
+                  <TableCell />
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {inspections.length === 0 && (
+                  <TableRow><TableCell colSpan={8} align="center" sx={{ py: 3, color: 'text.secondary' }}>
+                    Aucun contrôle enregistré
+                  </TableCell></TableRow>
+                )}
+                {inspections.map(ins => (
+                  <TableRow key={ins.id} hover>
+                    <TableCell>{new Date(ins.inspectionDate).toLocaleDateString('fr-FR')}</TableCell>
+                    <TableCell><Chip label={INSPECTION_TYPE_LABELS[ins.type]} size="small" variant="outlined" /></TableCell>
+                    <TableCell>
+                      <Chip label={ins.result.replace('_', ' ')} color={INSPECTION_RESULT_COLORS[ins.result]} size="small" />
+                    </TableCell>
+                    <TableCell>{ins.inspector ?? ins.user?.name ?? '—'}</TableCell>
+                    <TableCell>{ins.certificate ?? '—'}</TableCell>
+                    <TableCell>
+                      {ins.nextInspectionDate ? new Date(ins.nextInspectionDate).toLocaleDateString('fr-FR') : '—'}
+                    </TableCell>
+                    <TableCell>{ins.remarks ?? '—'}</TableCell>
+                    <TableCell>
+                      <Tooltip title="Supprimer">
+                        <IconButton size="small" color="error" onClick={() => { inspectionsApi.remove(ins.id); setInspections(p => p.filter(x => x.id !== ins.id)); }}>
+                          <DeleteIcon fontSize="small" />
+                        </IconButton>
+                      </Tooltip>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </Paper>
+        </Box>
+      )}
+
+      {/* ===== TAB 4: MAINTENANCE ===== */}
+      {tab === 4 && (
+        <Box>
+          <Stack direction="row" justifyContent="flex-end" mb={2}>
+            <Button variant="contained" size="small" startIcon={<AddIcon />} onClick={() => setMaintDialog(true)}>
+              Ajouter une gamme
+            </Button>
+          </Stack>
+          <Paper variant="outlined">
+            <Table size="small">
+              <TableHead>
+                <TableRow sx={{ bgcolor: 'grey.50' }}>
+                  <TableCell><strong>Titre</strong></TableCell>
+                  <TableCell><strong>Fréquence</strong></TableCell>
+                  <TableCell align="right"><strong>Durée (h)</strong></TableCell>
+                  <TableCell><strong>Dernière fois</strong></TableCell>
+                  <TableCell><strong>Prochaine échéance</strong></TableCell>
+                  <TableCell><strong>Compétences</strong></TableCell>
+                  <TableCell />
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {maintenancePlans.length === 0 && (
+                  <TableRow><TableCell colSpan={7} align="center" sx={{ py: 3, color: 'text.secondary' }}>
+                    Aucune gamme de maintenance
+                  </TableCell></TableRow>
+                )}
+                {maintenancePlans.map(mp => (
+                  <TableRow key={mp.id} hover>
+                    <TableCell fontWeight={600}>{mp.title}</TableCell>
+                    <TableCell><Chip label={MAINTENANCE_FREQ_LABELS[mp.frequency]} size="small" /></TableCell>
+                    <TableCell align="right">{mp.estimatedDurationH ?? '—'}</TableCell>
+                    <TableCell>{mp.lastPerformedAt ? new Date(mp.lastPerformedAt).toLocaleDateString('fr-FR') : '—'}</TableCell>
+                    <TableCell>
+                      {mp.nextDueAt
+                        ? <Chip label={new Date(mp.nextDueAt).toLocaleDateString('fr-FR')}
+                            color={new Date(mp.nextDueAt) < new Date() ? 'error' : 'default'} size="small" />
+                        : '—'}
+                    </TableCell>
+                    <TableCell>{mp.requiredSkills ?? '—'}</TableCell>
+                    <TableCell>
+                      <Tooltip title="Supprimer">
+                        <IconButton size="small" color="error" onClick={() => { maintenanceApi.remove(mp.id); setMaintPlans(p => p.filter(x => x.id !== mp.id)); }}>
+                          <DeleteIcon fontSize="small" />
+                        </IconButton>
+                      </Tooltip>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </Paper>
+        </Box>
+      )}
+
+      {/* ===== DIALOGS SATELLITES ===== */}
+
+      {/* Connection dialog */}
+      <Dialog open={connDialog} onClose={() => setConnDialog(false)} maxWidth="sm" fullWidth>
+        <DialogTitle>Ajouter une connexion</DialogTitle>
+        <DialogContent>
+          <Stack spacing={2} mt={1}>
+            <TextField label="N° de ligne *" size="small" fullWidth
+              value={connForm.lineNumber ?? ''} onChange={e => setConnForm(f => ({ ...f, lineNumber: e.target.value }))} />
+            <TextField select label="Type *" size="small" fullWidth
+              value={connForm.type ?? 'PROCESS_LINE'} onChange={e => setConnForm(f => ({ ...f, type: e.target.value as ConnectionType }))}>
+              {Object.entries(CONNECTION_TYPE_LABELS).map(([k, v]) => <MenuItem key={k} value={k}>{v}</MenuItem>)}
+            </TextField>
+            <TextField label="Fluide" size="small" fullWidth value={connForm.fluid ?? ''}
+              onChange={e => setConnForm(f => ({ ...f, fluid: e.target.value }))} />
+            <Stack direction="row" spacing={2}>
+              <TextField label="DN" size="small" fullWidth value={connForm.nominalDiameter ?? ''}
+                onChange={e => setConnForm(f => ({ ...f, nominalDiameter: e.target.value }))} />
+              <TextField label="Classe pression" size="small" fullWidth value={connForm.pressureClass ?? ''}
+                onChange={e => setConnForm(f => ({ ...f, pressureClass: e.target.value }))} />
+            </Stack>
+            <TextField label="Spec matière" size="small" fullWidth value={connForm.materialSpec ?? ''}
+              onChange={e => setConnForm(f => ({ ...f, materialSpec: e.target.value }))} />
+          </Stack>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setConnDialog(false)}>Annuler</Button>
+          <Button variant="contained" onClick={handleAddConnection} disabled={!connForm.lineNumber}>Ajouter</Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Spare Part dialog */}
+      <Dialog open={spDialog} onClose={() => setSpDialog(false)} maxWidth="sm" fullWidth>
+        <DialogTitle>Ajouter une pièce détachée</DialogTitle>
+        <DialogContent>
+          <Stack spacing={2} mt={1}>
+            <TextField label="Référence *" size="small" fullWidth value={spForm.partNumber ?? ''}
+              onChange={e => setSpForm(f => ({ ...f, partNumber: e.target.value }))} />
+            <TextField label="Description *" size="small" fullWidth value={spForm.description ?? ''}
+              onChange={e => setSpForm(f => ({ ...f, description: e.target.value }))} />
+            <Stack direction="row" spacing={2}>
+              <TextField label="Fabricant" size="small" fullWidth value={spForm.manufacturer ?? ''}
+                onChange={e => setSpForm(f => ({ ...f, manufacturer: e.target.value }))} />
+              <TextField select label="Criticité" size="small" fullWidth value={spForm.criticality ?? 'STANDARD'}
+                onChange={e => setSpForm(f => ({ ...f, criticality: e.target.value as SparePartCriticality }))}>
+                {Object.entries(CRITICALITY_LABELS).map(([k, v]) => <MenuItem key={k} value={k}>{v}</MenuItem>)}
+              </TextField>
+            </Stack>
+            <Stack direction="row" spacing={2}>
+              <TextField label="Qté rec." size="small" type="number" fullWidth value={spForm.recommendedQty ?? 1}
+                onChange={e => setSpForm(f => ({ ...f, recommendedQty: parseInt(e.target.value) }))} />
+              <TextField label="Stock actuel" size="small" type="number" fullWidth value={spForm.stockQty ?? 0}
+                onChange={e => setSpForm(f => ({ ...f, stockQty: parseInt(e.target.value) }))} />
+              <TextField label="Prix unit. (€)" size="small" type="number" fullWidth value={spForm.unitCost ?? ''}
+                onChange={e => setSpForm(f => ({ ...f, unitCost: parseFloat(e.target.value) }))} />
+            </Stack>
+            <TextField label="Délai (jours)" size="small" type="number" fullWidth value={spForm.leadTimeDays ?? ''}
+              onChange={e => setSpForm(f => ({ ...f, leadTimeDays: parseInt(e.target.value) }))} />
+          </Stack>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setSpDialog(false)}>Annuler</Button>
+          <Button variant="contained" onClick={handleAddSparePart} disabled={!spForm.partNumber || !spForm.description}>Ajouter</Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Inspection dialog */}
+      <Dialog open={inspecDialog} onClose={() => setInspecDialog(false)} maxWidth="sm" fullWidth>
+        <DialogTitle>Enregistrer un contrôle</DialogTitle>
+        <DialogContent>
+          <Stack spacing={2} mt={1}>
+            <Stack direction="row" spacing={2}>
+              <TextField select label="Type *" size="small" fullWidth value={inspecForm.type ?? ''}
+                onChange={e => setInspecForm(f => ({ ...f, type: e.target.value as InspectionType }))}>
+                {Object.entries(INSPECTION_TYPE_LABELS).map(([k, v]) => <MenuItem key={k} value={k}>{v}</MenuItem>)}
+              </TextField>
+              <TextField select label="Résultat *" size="small" fullWidth value={inspecForm.result ?? 'PASS'}
+                onChange={e => setInspecForm(f => ({ ...f, result: e.target.value as InspectionResult }))}>
+                <MenuItem value="PASS">PASS</MenuItem>
+                <MenuItem value="PASS_WITH_REMARKS">Passé avec remarques</MenuItem>
+                <MenuItem value="FAIL">FAIL</MenuItem>
+                <MenuItem value="PENDING_REVIEW">En attente</MenuItem>
+              </TextField>
+            </Stack>
+            <Stack direction="row" spacing={2}>
+              <TextField label="Date d'inspection *" type="date" size="small" fullWidth
+                value={inspecForm.inspectionDate ?? ''} onChange={e => setInspecForm(f => ({ ...f, inspectionDate: e.target.value }))}
+                slotProps={{ inputLabel: { shrink: true } }} />
+              <TextField label="Prochaine inspection" type="date" size="small" fullWidth
+                value={inspecForm.nextInspectionDate ?? ''} onChange={e => setInspecForm(f => ({ ...f, nextInspectionDate: e.target.value }))}
+                slotProps={{ inputLabel: { shrink: true } }} />
+            </Stack>
+            <TextField label="Inspecteur / Organisme" size="small" fullWidth value={inspecForm.inspector ?? ''}
+              onChange={e => setInspecForm(f => ({ ...f, inspector: e.target.value }))} />
+            <TextField label="N° certificat" size="small" fullWidth value={inspecForm.certificate ?? ''}
+              onChange={e => setInspecForm(f => ({ ...f, certificate: e.target.value }))} />
+            <TextField label="Remarques" size="small" fullWidth multiline rows={2} value={inspecForm.remarks ?? ''}
+              onChange={e => setInspecForm(f => ({ ...f, remarks: e.target.value }))} />
+          </Stack>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setInspecDialog(false)}>Annuler</Button>
+          <Button variant="contained" onClick={handleAddInspection} disabled={!inspecForm.type || !inspecForm.inspectionDate}>Enregistrer</Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Maintenance dialog */}
+      <Dialog open={maintDialog} onClose={() => setMaintDialog(false)} maxWidth="sm" fullWidth>
+        <DialogTitle>Ajouter une gamme de maintenance</DialogTitle>
+        <DialogContent>
+          <Stack spacing={2} mt={1}>
+            <TextField label="Titre *" size="small" fullWidth value={maintForm.title ?? ''}
+              onChange={e => setMaintForm(f => ({ ...f, title: e.target.value }))} />
+            <TextField select label="Fréquence *" size="small" fullWidth value={maintForm.frequency ?? 'ANNUAL'}
+              onChange={e => setMaintForm(f => ({ ...f, frequency: e.target.value as MaintenanceFrequency }))}>
+              {Object.entries(MAINTENANCE_FREQ_LABELS).map(([k, v]) => <MenuItem key={k} value={k}>{v}</MenuItem>)}
+            </TextField>
+            <TextField label="Description" size="small" fullWidth multiline rows={2} value={maintForm.description ?? ''}
+              onChange={e => setMaintForm(f => ({ ...f, description: e.target.value }))} />
+            <Stack direction="row" spacing={2}>
+              <TextField label="Durée estimée (h)" size="small" type="number" fullWidth value={maintForm.estimatedDurationH ?? ''}
+                onChange={e => setMaintForm(f => ({ ...f, estimatedDurationH: parseFloat(e.target.value) }))} />
+              <TextField label="Prochaine échéance" type="date" size="small" fullWidth value={maintForm.nextDueAt ?? ''}
+                onChange={e => setMaintForm(f => ({ ...f, nextDueAt: e.target.value }))}
+                slotProps={{ inputLabel: { shrink: true } }} />
+            </Stack>
+            <TextField label="Compétences requises" size="small" fullWidth value={maintForm.requiredSkills ?? ''}
+              onChange={e => setMaintForm(f => ({ ...f, requiredSkills: e.target.value }))} />
+            <TextField label="Notes de sécurité" size="small" fullWidth value={maintForm.safetyNotes ?? ''}
+              onChange={e => setMaintForm(f => ({ ...f, safetyNotes: e.target.value }))} />
+          </Stack>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setMaintDialog(false)}>Annuler</Button>
+          <Button variant="contained" onClick={handleAddMaint} disabled={!maintForm.title}>Ajouter</Button>
+        </DialogActions>
+      </Dialog>
 
       {/* Change Request Dialog */}
       <Dialog open={dialogOpen} onClose={() => setDialogOpen(false)} maxWidth="sm" fullWidth>

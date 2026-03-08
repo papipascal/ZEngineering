@@ -1,108 +1,176 @@
-# Déploiement Backend sur Railway — Guide Rapide (10 min)
+# Déploiement Backend sur Railway — Guide V3.4
 
-## Ce que tu vas obtenir
-- Backend NestJS sur `https://xxx.railway.app`
-- PostgreSQL sur Railway (gratuit)
-- MinIO sur Railway (gratuit)
-- Frontend Netlify qui pointe sur ce backend
+## État actuel (production opérationnelle)
 
----
-
-## Étape 1 — Créer le projet Railway
-
-1. Va sur https://railway.app
-2. Clique **"Continue with GitHub"** → autorise avec ton compte `papipascal`
-3. Clic **"New Project"** → **"Empty Project"**
-4. Renomme le projet : `zengineering`
+| Service | URL | Statut |
+|---------|-----|--------|
+| Backend | https://backend-production-dfa4.up.railway.app | Déployé |
+| Frontend | https://zengineering-app.netlify.app | Déployé |
+| PostgreSQL | postgres.railway.internal:5432 | Déployé (Railway interne) |
 
 ---
 
-## Étape 2 — Ajouter PostgreSQL
+## Redéployer le backend (mise à jour)
 
-Dans le projet Railway :
-1. Clique **"+ Add Service"** → **"Database"** → **PostgreSQL**
-2. Attends 30 secondes que la DB démarre
-3. Clique sur le service PostgreSQL → onglet **"Variables"**
-4. Copie la valeur de `DATABASE_URL` — tu en auras besoin plus tard
+```bash
+cd "c:\Users\goris\Documents\Mon Projet IA\Zen-gineering\backend"
 
----
+# Vérifier qu'on est lié au bon service
+railway status
 
-## Étape 3 — Déployer le Backend
-
-1. Clic **"+ Add Service"** → **"Docker Image"**
-2. Image : `pascal1010/zengineering-backend:v3.3`
-3. Clique **"Add Variables"** et colle ces variables :
-
+# Déployer
+railway service link backend
+railway up
 ```
+
+Le déploiement prend ~2-3 minutes. Le Dockerfile fait :
+1. `npm install`
+2. `npx prisma generate`
+3. `npx nest build`
+4. Au démarrage : `npx prisma migrate deploy && node dist/main`
+
+---
+
+## Redéployer le frontend (mise à jour)
+
+```bash
+cd "c:\Users\goris\Documents\Mon Projet IA\Zen-gineering\frontend"
+
+# Build (lit .env.production pour baker les URLs)
+npx vite build
+
+# Déployer sur Netlify
+npx netlify deploy --dir=dist --prod
+```
+
+> Le fichier `.env.production` DOIT exister avant le build sinon les URLs seront vides.
+
+---
+
+## Variables d'environnement Railway (backend)
+
+Ces variables sont configurées dans le dashboard Railway → service backend → Variables :
+
+```env
 NODE_ENV=production
 PORT=3000
-DATABASE_URL=<colle l'URL PostgreSQL copiée à l'étape 2>
-JWT_SECRET=ZenG-JWT-Secret-Railway-2026-SuperSecure-32chars!
-MINIO_ENDPOINT=zeng-minio.railway.internal
+DATABASE_URL=postgresql://...@postgres.railway.internal:5432/railway
+JWT_SECRET=<secret-fort>
+MINIO_ENDPOINT=localhost         # MinIO non déployé sur Railway — upload désactivé
 MINIO_PORT=9000
-MINIO_ROOT_USER=minioadmin
-MINIO_ROOT_PASSWORD=ZenG_Minio_2026!
+MINIO_ACCESS_KEY=minioadmin
+MINIO_SECRET_KEY=minioadmin
 MINIO_BUCKET=zengineering-files
 MINIO_USE_SSL=false
-SMTP_HOST=mailhog.railway.internal
+SMTP_HOST=localhost               # MailHog non déployé — emails sortants désactivés
 SMTP_PORT=1025
 CORS_ORIGIN=https://zengineering-app.netlify.app
+IMAP_HOST=outlook.office365.com
+IMAP_PORT=993
+IMAP_USER=<email-outlook>
+IMAP_PASS=<mot-de-passe>
+IMAP_TLS=true
 ```
-
-4. Clique **"Deploy"** — attends ~2 min
 
 ---
 
-## Étape 4 — Initialiser la Base de Données
+## Créer un nouveau projet Railway (depuis zéro)
 
-Une fois le backend déployé et vert :
+Si le projet Railway est perdu ou à recréer :
 
-1. Clique sur le service backend → onglet **"Settings"** → section **"Deploy"**
-2. Dans **"Start Command"**, note l'URL publique du backend (ex: `https://zengineering-backend-xxxx.railway.app`)
-3. Ouvre le terminal du service (onglet **"Deploy"** → **"Shell"**) et lance :
+### 1. Créer le projet
+
 ```bash
-npx prisma migrate deploy
-node dist/prisma/seed.js
+railway init                   # "Create new project" → nom : zengineering
+```
+
+### 2. Ajouter PostgreSQL
+
+Dans le dashboard Railway → "+ Add Service" → Database → PostgreSQL
+
+### 3. Lier le service backend
+
+```bash
+railway service link backend   # ou créer le service dans le dashboard d'abord
+```
+
+### 4. Configurer les variables
+
+```bash
+railway variable set NODE_ENV=production PORT=3000 JWT_SECRET=xxx ...
+# ou copier depuis le dashboard Railway
+```
+
+### 5. Déployer
+
+```bash
+cd backend
+railway up
+```
+
+### 6. Initialiser la base de données
+
+```bash
+railway ssh -- sh -c "cd /app && npx prisma migrate deploy"
+railway ssh -- sh -c "cd /app && npx prisma db seed"
+```
+
+### 7. Ajouter un domaine public
+
+Dans le dashboard Railway → service backend → Settings → Networking → "+ Add Domain"
+
+---
+
+## Voir les logs
+
+```bash
+railway logs --service backend
 ```
 
 ---
 
-## Étape 5 — Mettre à jour Netlify
+## Vérification rapide
 
-Une fois l'URL du backend connue (ex: `https://zengineering-backend-xxxx.railway.app`) :
+```bash
+# Test API (depuis n'importe où)
+curl https://backend-production-dfa4.up.railway.app/health
 
-1. Va sur https://app.netlify.com → site **"zengineering-app"**
-2. **Site Settings** → **Environment Variables** → **Add Variable** :
-   - Key : `VITE_API_URL`
-   - Value : `https://zengineering-backend-xxxx.railway.app`
-3. **Deploys** → **Trigger Deploy** → **Deploy site**
-
-Et c'est tout ! L'application sera complètement opérationnelle.
+# Swagger
+open https://backend-production-dfa4.up.railway.app/api/docs
+```
 
 ---
 
-## Credentials de démo
+## Dockerfile backend
 
-| Utilisateur | Email | Mot de passe |
-|---|---|---|
-| Admin | admin@zengineering.local | Password123! |
-| Chef de Projet | chef.projet@zengineering.local | Password123! |
-| Ingénieur | ingenieur@zengineering.local | Password123! |
+```dockerfile
+FROM node:22-alpine
+WORKDIR /app
+COPY package*.json ./
+RUN npm install --include=dev
+COPY prisma ./prisma/
+RUN npx prisma generate
+COPY . .
+RUN npx nest build
+EXPOSE 3000
+CMD ["sh", "-c", "npx prisma migrate deploy && node dist/main"]
+```
+
+> Note : NestJS compile dans `dist/main.js` (pas `dist/src/main.js`).
 
 ---
 
-## Alternative rapide — MinIO optionnel
+## Résoudre les problèmes courants Railway
 
-Si tu veux sauter MinIO pour aller plus vite (les uploads de fichiers ne fonctionneront pas mais tout le reste oui) :
-- Retire les variables `MINIO_*` du backend
-- Ajoute `STORAGE_DISABLED=true`
-- Le backend démarrera sans MinIO
+### "Cannot find module" au démarrage
+Le CMD pointe vers le mauvais fichier. Vérifier que `npx nest build` produit `dist/main.js`.
+
+### "Connection refused" PostgreSQL
+Vérifier que `DATABASE_URL` utilise `postgres.railway.internal` (pas `localhost`) en production.
+
+### Premier `railway up` va vers Postgres
+Toujours lier explicitement le service avant : `railway service link backend`
 
 ---
 
-## Coût estimé Railway
-
-- **Gratuit** avec le plan Hobby (5$/mois offerts en crédits)
-- PostgreSQL : ~0.5$/mois
-- Backend : ~1$/mois selon usage
-- Total demo : ~0$/mois avec les crédits gratuits
+*Version 3.4 — Mars 2026*

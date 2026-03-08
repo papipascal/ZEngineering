@@ -49,6 +49,7 @@ model User {
   orgPositions      ProjectOrganization[]
   whitelistEntries  EmailSenderWhitelist[]
   proposalReviews   DocumentProposal[] @relation("ProposalReviewer")
+  inspectionRecords InspectionRecord[]
 }
 
 model Project {
@@ -81,6 +82,7 @@ model Project {
   projectTree        ProjectTree[]
   senderWhitelist    EmailSenderWhitelist[]
   documentProposals  DocumentProposal[]
+  connections        Connection[]
 }
 
 model ProjectMember {
@@ -176,10 +178,194 @@ model Equipment {
   createdAt            DateTime          @default(now())
   updatedAt            DateTime          @updatedAt
 
-  discussions    Discussion[]
-  changeRequests ChangeRequest[]
-  documents      Document[]
-  dataOrigins    DataOrigin[]
+  discussions       Discussion[]
+  changeRequests    ChangeRequest[]
+  documents         Document[]
+  dataOrigins       DataOrigin[]
+  connectionsFrom   Connection[]       @relation("ConnectionFrom")
+  connectionsTo     Connection[]       @relation("ConnectionTo")
+  spareParts        SparePart[]
+  inspectionRecords InspectionRecord[]
+  maintenancePlans  MaintenancePlan[]
+}
+
+// ==========================================
+// Connections (Line List — liaisons entre équipements)
+// ==========================================
+
+enum ConnectionType {
+  PROCESS_LINE
+  INSTRUMENT_LOOP
+  ELECTRICAL_CABLE
+  UTILITY_LINE
+  DRAIN_VENT
+}
+
+model Connection {
+  id        String @id @default(uuid())
+  projectId String
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  lineNumber      String
+  type            ConnectionType
+  fluid           String?
+
+  fromEquipmentId String?
+  fromEquipment   Equipment? @relation("ConnectionFrom", fields: [fromEquipmentId], references: [id], onDelete: SetNull)
+  toEquipmentId   String?
+  toEquipment     Equipment? @relation("ConnectionTo", fields: [toEquipmentId], references: [id], onDelete: SetNull)
+  fromNozzle      String?
+  toNozzle        String?
+
+  nominalDiameter String?
+  pressureClass   String?
+  materialSpec    String?
+  insulationType  String?
+  paintSystem     String?
+  isoCertRequired Boolean @default(false)
+  lineListRef     String?
+  notes           String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([projectId, lineNumber])
+  @@index([projectId])
+  @@index([fromEquipmentId])
+  @@index([toEquipmentId])
+}
+
+// ==========================================
+// Spare Parts (Pièces détachées)
+// ==========================================
+
+enum SparePartCriticality {
+  CRITICAL
+  IMPORTANT
+  STANDARD
+  CONSUMABLE
+}
+
+model SparePart {
+  id          String               @id @default(uuid())
+  equipmentId String
+  equipment   Equipment            @relation(fields: [equipmentId], references: [id], onDelete: Cascade)
+
+  partNumber       String
+  description      String
+  manufacturer     String?
+  supplierRef      String?
+  criticality      SparePartCriticality @default(STANDARD)
+
+  recommendedQty   Int    @default(1)
+  stockQty         Int    @default(0)
+  unitCost         Float?
+  currency         String @default("EUR")
+  leadTimeDays     Int?
+
+  storageLocation  String?
+  storageCondition String?
+
+  commissioningQty Int?
+  operationQty     Int?
+  capitalSpareQty  Int?
+
+  notes      String?
+  documentId String?
+  document   Document? @relation(fields: [documentId], references: [id], onDelete: SetNull)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([equipmentId])
+  @@index([criticality])
+}
+
+// ==========================================
+// Inspection Records (Contrôles & tests)
+// ==========================================
+
+enum InspectionType {
+  VISUAL
+  NDT_UT
+  NDT_RT
+  NDT_PT
+  NDT_MT
+  PRESSURE_TEST
+  FUNCTIONAL_TEST
+  FAT
+  SAT
+  PMI
+}
+
+enum InspectionResult {
+  PASS
+  PASS_WITH_REMARKS
+  FAIL
+  PENDING_REVIEW
+}
+
+model InspectionRecord {
+  id          String           @id @default(uuid())
+  equipmentId String
+  equipment   Equipment        @relation(fields: [equipmentId], references: [id], onDelete: Cascade)
+
+  type            InspectionType
+  result          InspectionResult
+  inspectionDate  DateTime
+  inspector       String?
+  inspectorId     String?
+  user            User?     @relation(fields: [inspectorId], references: [id], onDelete: SetNull)
+
+  nextInspectionDate DateTime?
+  certificate        String?
+  description        String?
+  remarks            String?
+
+  documentId String?
+  document   Document? @relation(fields: [documentId], references: [id], onDelete: SetNull)
+
+  createdAt DateTime @default(now())
+
+  @@index([equipmentId])
+  @@index([inspectionDate])
+}
+
+// ==========================================
+// Maintenance Plans (Gammes de maintenance préventive)
+// ==========================================
+
+enum MaintenanceFrequency {
+  DAILY
+  WEEKLY
+  MONTHLY
+  QUARTERLY
+  SEMI_ANNUAL
+  ANNUAL
+  BIENNIAL
+  ON_CONDITION
+}
+
+model MaintenancePlan {
+  id          String    @id @default(uuid())
+  equipmentId String
+  equipment   Equipment @relation(fields: [equipmentId], references: [id], onDelete: Cascade)
+
+  title              String
+  description        String?
+  frequency          MaintenanceFrequency
+  estimatedDurationH Float?
+  requiredSkills     String?
+  requiredTools      String?
+  safetyNotes        String?
+  lastPerformedAt    DateTime?
+  nextDueAt          DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([equipmentId])
+  @@index([nextDueAt])
 }
 
 // ==========================================
@@ -332,6 +518,8 @@ model Document {
   contractItems     ContractItem[]
   dataOrigins       DataOrigin[]
   documentProposals DocumentProposal[]
+  spareParts        SparePart[]
+  inspectionRecords InspectionRecord[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

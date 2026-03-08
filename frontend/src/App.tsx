@@ -1,7 +1,28 @@
+import { Component, ReactNode } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './auth/AuthContext';
 import { ProjectProvider } from './auth/ProjectContext';
 import { ProtectedRoute } from './auth/ProtectedRoute';
+
+class ErrorBoundary extends Component<{ children: ReactNode }, { error: Error | null }> {
+  constructor(props: { children: ReactNode }) {
+    super(props);
+    this.state = { error: null };
+  }
+  static getDerivedStateFromError(error: Error) { return { error }; }
+  render() {
+    if (this.state.error) {
+      return (
+        <div style={{ padding: 40, fontFamily: 'monospace', background: '#1a1a2e', color: '#ff6b6b', minHeight: '100vh' }}>
+          <h2>Erreur rendue</h2>
+          <pre style={{ whiteSpace: 'pre-wrap', color: '#ffd93d' }}>{this.state.error.message}</pre>
+          <pre style={{ whiteSpace: 'pre-wrap', fontSize: 12, color: '#aaa' }}>{this.state.error.stack}</pre>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
 import Layout from './components/Layout';
 import LoginPage from './pages/LoginPage';
 import ProjectSelectionPage from './pages/ProjectSelectionPage';
@@ -37,6 +58,7 @@ function App() {
     <BrowserRouter>
       <AuthProvider>
         <ProjectProvider>
+          <ErrorBoundary>
           <Routes>
             <Route path="/login" element={<LoginPage />} />
             <Route
@@ -90,6 +112,7 @@ function App() {
             </Route>
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
+          </ErrorBoundary>
         </ProjectProvider>
       </AuthProvider>
     </BrowserRouter>

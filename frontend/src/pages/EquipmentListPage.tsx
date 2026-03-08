@@ -32,7 +32,10 @@ export default function EquipmentListPage() {
     if (projectId) params.projectId = projectId;
     if (category !== 'ALL') params.category = category;
     if (search) params.search = search;
-    equipmentApi.list(params).then((r) => setEquipment(r.data)).finally(() => setLoading(false));
+    equipmentApi.list(params).then((r) => {
+      const payload = r.data as unknown as { data: Equipment[] } | Equipment[];
+      setEquipment(Array.isArray(payload) ? payload : (payload as { data: Equipment[] }).data ?? []);
+    }).finally(() => setLoading(false));
   }, [category, search, projectId]);
 
   return (

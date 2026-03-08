@@ -42,3 +42,6 @@ minio-data/
 
 # Accidental Windows nul file
 nul
+
+# Local Netlify folder
+.netlify
