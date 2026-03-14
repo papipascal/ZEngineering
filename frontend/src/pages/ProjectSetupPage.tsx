@@ -249,6 +249,15 @@ export default function ProjectSetupPage() {
               Set IMAP_HOST, IMAP_PORT, IMAP_USER, IMAP_PASSWORD environment variables on the backend to enable inbox polling.
             </Typography>
           )}
+          <Button
+            variant="outlined"
+            size="small"
+            startIcon={<EmailIcon />}
+            sx={{ mt: 2 }}
+            onClick={() => navigate('/email-rules')}
+          >
+            Gérer les règles de routage email
+          </Button>
         </CardContent>
       </Card>
 

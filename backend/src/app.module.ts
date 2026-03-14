@@ -26,6 +26,7 @@ import { ConnectionsModule } from './modules/connections/connections.module.js';
 import { SparePartsModule } from './modules/spare-parts/spare-parts.module.js';
 import { InspectionsModule } from './modules/inspections/inspections.module.js';
 import { MaintenanceModule } from './modules/maintenance/maintenance.module.js';
+import { EmailRulesModule } from './modules/email-rules/email-rules.module.js';
 import { AppController } from './app.controller.js';
 import { AppService } from './app.service.js';
 
@@ -58,6 +59,7 @@ import { AppService } from './app.service.js';
     SparePartsModule,
     InspectionsModule,
     MaintenanceModule,
+    EmailRulesModule,
   ],
   controllers: [AppController],
   providers: [AppService],

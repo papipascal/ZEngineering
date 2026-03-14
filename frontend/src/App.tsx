@@ -52,6 +52,7 @@ import DocumentProposalsPage from './pages/DocumentProposalsPage';
 import ConnectionsPage from './pages/ConnectionsPage';
 import SparePartsPage from './pages/SparePartsPage';
 import VersionSelectPage from './pages/VersionSelectPage';
+import EmailRulesPage from './pages/EmailRulesPage';
 
 function App() {
   return (
@@ -109,6 +110,7 @@ function App() {
               <Route path="/document-proposals" element={<DocumentProposalsPage />} />
               <Route path="/connections" element={<ConnectionsPage />} />
               <Route path="/spare-parts" element={<SparePartsPage />} />
+              <Route path="/email-rules" element={<EmailRulesPage />} />
             </Route>
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
