@@ -64,6 +64,11 @@ export class ImapPollingService implements OnModuleInit, OnModuleDestroy {
       logger: false,
     });
 
+    // Prevent unhandled 'error' events from crashing the Node.js process
+    client.on('error', (err) => {
+      this.logger.error(`IMAP connection error: ${err.message}`);
+    });
+
     await client.connect();
 
     try {
